@@ -1,6 +1,8 @@
 package ru.artemmaklashev.telegram_bot_raso.controller;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestTemplate;
 import org.telegram.telegrambots.meta.api.methods.botapimethods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
@@ -14,10 +16,15 @@ import ru.artemmaklashev.telegram_bot_raso.buttons.Buttons;
 
 @Component
 public class TelegramController {
-    private final TelegramClient client;
+    @Value("${backend.api.url}")
+    private String url;
 
-    public TelegramController(TelegramClient client) {
+    private final TelegramClient client;
+    private final RestTemplate restTemplate;
+
+    public TelegramController(TelegramClient client, RestTemplate restTemplate) {
         this.client = client;
+        this.restTemplate = restTemplate;
     }
 
     /**
@@ -66,12 +73,18 @@ public class TelegramController {
 
             if ("gypsumBoardReport".equalsIgnoreCase(callbackData)) {
                 editMessage(chatId, messageId, "Вы запросили отчет по ГСП.");
+                // TODO: Отправить отчет
+                String report = getReportData();
             } else {
                 editMessage(chatId, messageId, "Неизвестное действие.");
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private String getReportData() {
+        
     }
 
 

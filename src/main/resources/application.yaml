@@ -5,6 +5,7 @@ spring:
     password: 402986
     driver-class-name: com.mysql.cj.jdbc.Driver
 
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -38,3 +39,9 @@ logging:
 bot:
   name: raso_bot
   token: 7764343387:AAFVAfign7eUwlZMfMSGmPgRPgR7n6UX7_c
+
+backend:
+  api:
+    url: http://130.193.39.169:8080/api/
+  auth:
+    url: http://130.193.39.169:8080/auth/
