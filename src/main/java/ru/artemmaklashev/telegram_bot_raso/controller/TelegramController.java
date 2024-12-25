@@ -95,7 +95,7 @@ public class TelegramController {
 
 
             if ("gypsumBoardReport".equalsIgnoreCase(callbackData)) {
-                editMessage(chatId, messageId, "Вы запросили отчет по ГСП.");
+                editMessage(chatId, messageId, chatId + " " + "Вы запросили отчет по ГСП.");
                 // TODO: Отправить отчет
                 String report = getReportData();
                 sendNewMessage(chatId, report);
@@ -109,6 +109,7 @@ public class TelegramController {
     }
 
     private String getReportData() {
+
         List<BoardProduction> productions = gypsymBoardReportService.getLastProductions().stream()
                 .filter(boardProduction -> boardProduction.getCategory().getId()  > 1 && boardProduction.getCategory().getId() <=4)
                 .toList();
@@ -160,6 +161,7 @@ public class TelegramController {
                         LocalDate.now().minusDays(1L).format(DateTimeFormatter.ISO_LOCAL_DATE) + ":**\n", "\n\n**Итого: " + totalValue + " м"+"\u00B2**" ));
 
         return resultString  ;
+
     }
 
 
@@ -243,7 +245,7 @@ public class TelegramController {
     /**
      * Выполнение команды Telegram API.
      */
-    private void executeMessage(BotApiMethod<?> message) {
+    public void executeMessage(BotApiMethod<?> message) {
         try {
             this.client.execute(message);
             System.out.println("Сообщение отправлено: " + message);
