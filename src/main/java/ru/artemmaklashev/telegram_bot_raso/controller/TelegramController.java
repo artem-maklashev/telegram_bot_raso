@@ -72,7 +72,7 @@ public class TelegramController {
 
 
             if ("gypsumBoardReport".equalsIgnoreCase(callbackData)) {
-                editMessage(chatId, messageId, "Вы запросили отчет по ГСП.");
+                editMessage(chatId, messageId, chatId + " " + "Вы запросили отчет по ГСП.");
                 // TODO: Отправить отчет
                 String report = getReportData();
             } else {
@@ -84,7 +84,7 @@ public class TelegramController {
     }
 
     private String getReportData() {
-        
+        return null;
     }
 
 
@@ -166,7 +166,7 @@ public class TelegramController {
     /**
      * Выполнение команды Telegram API.
      */
-    private void executeMessage(BotApiMethod<?> message) {
+    public void executeMessage(BotApiMethod<?> message) {
         try {
             this.client.execute(message);
             System.out.println("Сообщение отправлено: " + message);

@@ -45,3 +45,12 @@ backend:
     url: http://130.193.39.169:8080/api/
   auth:
     url: http://130.193.39.169:8080/auth/
+
+telegram:
+  notification:
+    chatIds:
+      - 596593025
+
+  bot:
+    name: raso_bot
+    token: 7764343387:AAFVAfign7eUwlZMfMSGmPgRPgR7n6UX7_c
