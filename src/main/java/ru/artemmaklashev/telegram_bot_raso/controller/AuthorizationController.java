@@ -27,6 +27,9 @@ public class AuthorizationController {
         builder.queryParam("password", "402986");
         URI finalUri = builder.build().toUri();
         AuthenticationResponse result = restTemplate.getForObject(finalUri, AuthenticationResponse.class);
-        return result.getToken();
+        if (result != null) {
+            return result.getToken();
+        }
+        return null;
     }
 }
