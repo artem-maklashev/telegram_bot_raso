@@ -37,10 +37,6 @@ logging:
 #  token: ${BOT_TOKEN}  # Передача токена через переменные окружения
 
 
-bot:
-  name: raso_bot
-  token: 7764343387:AAFVAfign7eUwlZMfMSGmPgRPgR7n6UX7_c
-
 backend:
   api:
     url: http://130.193.39.169:8080/api/
@@ -53,5 +49,7 @@ telegram:
       - 596593025
 
   bot:
-    name: raso_bot
-    token: 7764343387:AAFVAfign7eUwlZMfMSGmPgRPgR7n6UX7_c
+#    name: raso_bot #production
+#    token: 7764343387:AAFVAfign7eUwlZMfMSGmPgRPgR7n6UX7_c
+    name: archiktlt_test_bot #Testdevelopment
+    token: 5956010942:AAHQ8Vx9zkE6Z8uyys3Ftn_fWd-GLouxbUY

@@ -18,7 +18,7 @@ import ru.artemmaklashev.telegram_bot_raso.controller.TelegramController;
 @Component
 public class Bot implements SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer{
 
-    @Value("${bot.token}")
+    @Value("${telegram.bot.token}")
     private String token;
     private final TelegramController telegramController;
 
@@ -43,7 +43,6 @@ public class Bot implements SpringLongPollingBot, LongPollingSingleThreadUpdateC
             telegramController.handleUpdate(update);
         }
     }
-
 
 
 }
