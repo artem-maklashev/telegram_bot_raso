@@ -10,7 +10,6 @@ import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageTe
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import ru.artemmaklashev.telegram_bot_raso.buttons.Button;
 import ru.artemmaklashev.telegram_bot_raso.buttons.Buttons;
@@ -19,6 +18,8 @@ import ru.artemmaklashev.telegram_bot_raso.entity.delays.BoardDelays;
 import ru.artemmaklashev.telegram_bot_raso.entity.delays.Delays;
 import ru.artemmaklashev.telegram_bot_raso.entity.gypsumboard.GypsumBoard;
 import ru.artemmaklashev.telegram_bot_raso.entity.production.BoardProduction;
+import ru.artemmaklashev.telegram_bot_raso.service.report.ASCIItable;
+import ru.artemmaklashev.telegram_bot_raso.service.report.ASCIItableImage;
 import ru.artemmaklashev.telegram_bot_raso.service.reportServices.gypsumBoard.GypsymBoardReportService;
 
 import javax.imageio.ImageIO;
@@ -27,9 +28,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -95,11 +94,13 @@ public class TelegramController {
 
 
             if ("gypsumBoardReport".equalsIgnoreCase(callbackData)) {
-                editMessage(chatId, messageId, chatId + " " + "Вы запросили отчет по ГСП.");
+                editMessage(chatId, messageId, update.getCallbackQuery().getFrom().getFirstName() + ", Вы запросили отчет по ГСП.");
                 // TODO: Отправить отчет
                 String report = getReportData();
+                sendImage(chatId, getImageReport(),
+                        ("*Выпуск продукции за " + LocalDate.now().minusDays(1L).format(DateTimeFormatter.ISO_LOCAL_DATE)+"*\n")
+                                .replace("-", "\\-"));
                 sendNewMessage(chatId, report);
-                sendImage(chatId, getImageReport());
             } else {
                 editMessage(chatId, messageId, "Неизвестное действие.");
             }
@@ -116,7 +117,8 @@ public class TelegramController {
         List<BoardDelays> delays = gypsymBoardReportService.getLastDelays();
         String boardProductions = formatBoardProductions(productions);
         String boardDelays = formatBoardDelays(delays);
-        return boardProductions + "\n\n" + boardDelays ;
+
+        return boardDelays ;
     }
 
     private String formatBoardDelays(List<BoardDelays> delays) {
@@ -149,17 +151,18 @@ public class TelegramController {
 
         // Собираем данные в Map, где ключ — это описание продукции, а значение — её количество
         Map<String, Integer> result = fetchBoardData(productions);;
-
+        String resultTable = new ASCIItable(result, List.of("Продукция", "Кол-во")).drawTable();
 
         // Вычисление общей суммы выпуска
         String totalValue = String.format("%.0f",productions.stream().mapToDouble(BoardProduction::getValue).sum());
 
         // Формирование итоговой строки с добавлением суммы
-        String resultString = result.entrySet().stream()
-                .map(entry -> entry.getKey() + ": " + entry.getValue())
-                .collect(Collectors.joining("\n", "**Выпуск продукции за " +
-                        LocalDate.now().minusDays(1L).format(DateTimeFormatter.ISO_LOCAL_DATE) + ":**\n", "\n\n**Итого: " + totalValue + " м"+"\u00B2**" ));
-
+//        String resultString = result.entrySet().stream()
+//                .map(entry -> entry.getKey() + ": " + entry.getValue())
+//                .collect(Collectors.joining("\n", "**Выпуск продукции за " +
+//                        LocalDate.now().minusDays(1L).format(DateTimeFormatter.ISO_LOCAL_DATE) + ":**\n", "\n\n**Итого: " + totalValue + " м"+"\u00B2**" ));
+        String resultString = "**Выпуск продукции за " + LocalDate.now().minusDays(1L).format(DateTimeFormatter.ISO_LOCAL_DATE)+"**\n" +
+                 resultTable + "\n" + "**Итого: " + totalValue + " м"+"²**";
         return resultString  ;
 
     }
@@ -259,12 +262,14 @@ public class TelegramController {
         SendMessage message = SendMessage.builder()
                 .chatId(chatId)
                 .text(newMessage)
+                .parseMode("HTML")
+//                .parseMode("MarkdownV2")
                 .build();
 
         executeMessage(message);
     }
 
-    public void sendImage(String chatId, BufferedImage image) {
+    public void sendImage(String chatId, BufferedImage image, String caption) {
         try {
             // Конвертируем BufferedImage в InputStream
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -278,7 +283,9 @@ public class TelegramController {
             SendPhoto message = SendPhoto.builder()
                     .chatId(chatId)
                     .photo(photoFile)
-                    .caption(getReportData())
+                    .caption(caption)
+                    .showCaptionAboveMedia(true)
+                    .parseMode("MarkdownV2")
                     .build();
 
             // Отправьте сообщение с помощью метода execute (зависит от реализации вашего бота)
@@ -311,7 +318,7 @@ public class TelegramController {
         // Собираем данные в Map, где ключ — это описание продукции, а значение — её количество
 
         Map<String, Integer> result = fetchBoardData(productions);;
-        return SampleCgart.ProductionTable(result);
+        return new ASCIItableImage(result, List.of("Продукция", "Кол-во")).drawTable();
     }
 
     private Map<String, Integer> fetchBoardData(List<BoardProduction> productions) {
@@ -320,7 +327,7 @@ public class TelegramController {
                 .collect(Collectors.toMap(
                         production -> {
                             GypsumBoard gb = production.getProduct();
-                            return gb.getTradeMark().getName() + " " + gb.getBoardType().getName() +
+                            return gb.getTradeMark().getName().substring(0,3) + " " + gb.getBoardType().getName() +
                                     "-" + gb.getEdge().getName() + " " + gb.getThickness().getValue() +
                                     "-" + gb.getWidth().getValue() + "-" + gb.getLength().getValue();
                         },
