@@ -4,8 +4,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import ru.artemmaklashev.telegram_bot_raso.service.TelegramNotificationSender;
+import ru.artemmaklashev.telegram_bot_raso.service.gypsumboard.TelegramNotificationSender;
 
 @RestController
 @RequestMapping("/telegram")

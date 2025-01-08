@@ -1,4 +1,4 @@
-package ru.artemmaklashev.telegram_bot_raso.service;
+package ru.artemmaklashev.telegram_bot_raso.service.gypsumboard;
 
 
 

@@ -58,6 +58,7 @@ public class TelegramController {
         System.out.println("handleUpdate вызван. Тип обновления: " + (update.hasCallbackQuery() ? "CallbackQuery" : "Message"));
 
         if (update.hasMessage() && update.getMessage().hasText()) {
+            var user = update.getMessage().getFrom();
             handleTextCommand(update);
         } else if (update.hasCallbackQuery()) {
             handleCallback(update);
