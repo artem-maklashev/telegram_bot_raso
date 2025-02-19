@@ -10,29 +10,29 @@ import java.util.List;
 
 @Component
 public class TelegramNotificationSender {
-    private final TelegramController telegramController;
-    private final TelegramConfig config;
-
-
-    public TelegramNotificationSender(TelegramController telegramController, TelegramConfig config) {
-        this.telegramController = telegramController;
-        this.config = config;
-    }
-
-    public void sendMessage(String message) {
-        List<String> chatIds = config.getNotification().getChatIds();
-        for (String chatId : chatIds) {
-            SendMessage newMessage = new SendMessage(chatId, message);
-
-            telegramController.executeMessage(newMessage); // Отправляем сообщение через TelegramController
-        }
-    }
-
-    public void sendMessage(SendMessage message) {
-        List<String> chatIds = config.getNotification().getChatIds();
-        for (String chatId : chatIds) {
-            telegramController.executeMessage(message); // Отправляем сообщение через TelegramController
-        }
-    }
+//    private final TelegramController telegramController;
+//    private final TelegramConfig config;
+//
+//
+//    public TelegramNotificationSender(TelegramController telegramController, TelegramConfig config) {
+//        this.telegramController = telegramController;
+//        this.config = config;
+//    }
+//
+//    public void sendMessage(String message) {
+//        List<String> chatIds = config.getNotification().getChatIds();
+//        for (String chatId : chatIds) {
+//            SendMessage newMessage = new SendMessage(chatId, message);
+//
+//            telegramController.executeMessage(newMessage); // Отправляем сообщение через TelegramController
+//        }
+//    }
+//
+//    public void sendMessage(SendMessage message) {
+//        List<String> chatIds = config.getNotification().getChatIds();
+//        for (String chatId : chatIds) {
+//            telegramController.executeMessage(message); // Отправляем сообщение через TelegramController
+//        }
+//    }
 
 }

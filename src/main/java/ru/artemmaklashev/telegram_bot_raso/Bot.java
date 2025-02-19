@@ -13,19 +13,22 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 
 import ru.artemmaklashev.telegram_bot_raso.config.TelegramConfig;
 import ru.artemmaklashev.telegram_bot_raso.controller.TelegramController;
-
+import ru.artemmaklashev.telegram_bot_raso.service.telegram.TelegramUserService;
 
 
 @Component
-public class Bot implements SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer{
+public class Bot implements SpringLongPollingBot, LongPollingSingleThreadUpdateConsumer {
 
     @Value("${telegram.bot.token}")
     private String token;
     private final TelegramController telegramController;
+    private final TelegramUserService telegramUserService;
 
     @Autowired
-    public Bot(TelegramController telegramController) {
-        this.telegramController = telegramController;   }
+    public Bot(TelegramController telegramController, TelegramUserService telegramUserService) {
+        this.telegramController = telegramController;
+        this.telegramUserService = telegramUserService;
+    }
 
 
     @Override
@@ -47,11 +50,13 @@ public class Bot implements SpringLongPollingBot, LongPollingSingleThreadUpdateC
             // Обработка callback-запросов
             CallbackQuery callbackQuery = update.getCallbackQuery();
             String data = callbackQuery.getData();
+            if ("authorize".equals(data) || "deny".equals(data)) {
+                telegramUserService.handleCallbackQuery(callbackQuery); // Передаем управление вашему обработчику
+            } else {
+                // Обработка других callback-запросов
+                telegramController.handleUpdate(update);
 
-        } else {
-            // Обработка других callback-запросов
-            telegramController.handleUpdate(update);
-
+            }
         }
     }
 }

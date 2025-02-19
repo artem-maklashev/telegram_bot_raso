@@ -5,33 +5,37 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import ru.artemmaklashev.telegram_bot_raso.buttons.Button;
 import ru.artemmaklashev.telegram_bot_raso.buttons.Buttons;
+import ru.artemmaklashev.telegram_bot_raso.config.TelegramConfig;
+import ru.artemmaklashev.telegram_bot_raso.controller.TelegramController;
 import ru.artemmaklashev.telegram_bot_raso.controller.TelegramUserController;
 import ru.artemmaklashev.telegram_bot_raso.repositories.telegram.TelegramUserRepository;
 import ru.artemmaklashev.telegram_bot_raso.service.gypsumboard.TelegramNotificationSender;
 
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class TelegramUserService {
     private final TelegramUserRepository telegramUserRepository;
-    private final TelegramNotificationSender telegramNotificationSender;
+    private final TelegramClient telegramClient;
+    public final ConcurrentHashMap<String, CompletableFuture<Boolean>> pendingApprovals = new ConcurrentHashMap<>();
 
-    private final ConcurrentHashMap<String, CompletableFuture<Boolean>> pendingApprovals = new ConcurrentHashMap<>();
-
-    public TelegramUserService(TelegramUserRepository telegramUserRepository, TelegramUserController telegramUserController, TelegramNotificationSender telegramNotificationSender) {
+    public TelegramUserService(TelegramUserRepository telegramUserRepository, TelegramClient telegramClient) {
         this.telegramUserRepository = telegramUserRepository;
-        this.telegramNotificationSender = telegramNotificationSender;
+
+        this.telegramClient = telegramClient;
     }
 
     public boolean isKnownUser(Long userId) {
         return telegramUserRepository.existsByTelegramId(userId);
     }
 
-    public InlineKeyboardMarkup approvedRequest(Long id, TelegramClient client) {
+    public InlineKeyboardMarkup approvedRequest() {
         try {
             Button button = new Button("Запросить доступ", "approve");
             Buttons buttons = new Buttons();
@@ -45,7 +49,7 @@ public class TelegramUserService {
         return null;
     }
 
-    public Object approveUser(User user, String chatId, TelegramClient client) {
+    public boolean approveUser(User user, String chatId, TelegramClient client) {
         try {
             Button authorize = new Button("Разрешить", "authorize");
             Button deny = new Button("Отклонить", "deny");
@@ -60,12 +64,12 @@ public class TelegramUserService {
                     .text(messageText)
                     .replyMarkup(markup)
                     .build();
-            telegramNotificationSender.sendMessage(message);// Создаем CompletableFuture для ожидания ответа
+            sendAdminMessage(message);// Создаем CompletableFuture для ожидания ответа
             CompletableFuture<Boolean> future = new CompletableFuture<>();
             pendingApprovals.put(chatId, future);
 
             // Ждем ответа
-            return future.get(); // Блокирует поток, пока не получит ответ
+            return future.get();
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -86,6 +90,22 @@ public class TelegramUserService {
             }
             pendingApprovals.remove(chatId); // Удаляем из ожидания
         }
+    }
+
+    public void sendAdminMessage(SendMessage message) {
+        try {
+        List<String> chatIds = new TelegramConfig().getNotification().getChatIds();
+        for (String chatId : chatIds) {
+            SendMessage newMessage = SendMessage.builder()
+                    .chatId(chatId)
+                    .text(message.getText())
+                    .replyMarkup(message.getReplyMarkup())
+                    .build();
+
+            telegramClient.execute(newMessage); // Отправляем сообщение через TelegramController
+        }
+    } catch (TelegramApiException e) {
+        e.printStackTrace();}
     }
 }
 
