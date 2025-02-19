@@ -28,4 +28,11 @@ public class TelegramNotificationSender {
         }
     }
 
+    public void sendMessage(SendMessage message) {
+        List<String> chatIds = config.getNotification().getChatIds();
+        for (String chatId : chatIds) {
+            telegramController.executeMessage(message); // Отправляем сообщение через TelegramController
+        }
+    }
+
 }

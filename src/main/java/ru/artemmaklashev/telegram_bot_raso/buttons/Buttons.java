@@ -10,14 +10,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Buttons {
-    private final Long chatId;
-    private final TelegramClient client;
+    //    private final Long chatId;
+//    private final TelegramClient client;
     private final List<InlineKeyboardRow> rows = new ArrayList<>();
-    private final InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup(rows);
+//    private final InlineKeyboardMarkup keyboard = new InlineKeyboardMarkup(rows);
 
-    public Buttons(Long chatId,  TelegramClient client) {
-        this.chatId = chatId;
-        this.client = client;
+//    public Buttons(TelegramClient client) {
+//        this.chatId = chatId;
+//        this.client = client;
+//    }
+
+
+    public Buttons() {
     }
 
     public void addButton(Button button, int rowNumber) {
@@ -37,23 +41,23 @@ public class Buttons {
         return new InlineKeyboardMarkup(rows);
     }
 
-    public void sendTextWithButtons() {
-
-        // Создаем разметку клавиатуры
-
-        keyboard.setKeyboard(rows);
-
-        // Создаем сообщение
-        SendMessage message = SendMessage.builder()
-                .chatId(this.chatId.toString())
-                .replyMarkup(keyboard)
-                .build();
-
-        // Отправляем сообщение
-        try {
-            this.client.execute(message);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+//    public void sendTextWithButtons() {
+//
+//        // Создаем разметку клавиатуры
+//
+//        keyboard.setKeyboard(rows);
+//
+//        // Создаем сообщение
+//        SendMessage message = SendMessage.builder()
+//                .chatId(this.chatId.toString())
+//                .replyMarkup(keyboard)
+//                .build();
+//
+//        // Отправляем сообщение
+//        try {
+//            this.client.execute(message);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
 }
+

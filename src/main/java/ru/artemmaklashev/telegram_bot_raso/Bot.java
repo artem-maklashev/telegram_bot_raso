@@ -8,6 +8,7 @@ import org.telegram.telegrambots.client.okhttp.OkHttpTelegramClient;
 import org.telegram.telegrambots.longpolling.interfaces.LongPollingUpdateConsumer;
 import org.telegram.telegrambots.longpolling.starter.SpringLongPollingBot;
 import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateConsumer;
+import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import ru.artemmaklashev.telegram_bot_raso.config.TelegramConfig;
@@ -39,11 +40,19 @@ public class Bot implements SpringLongPollingBot, LongPollingSingleThreadUpdateC
 
     @Override
     public void consume(Update update) {
-        if (update.hasMessage() || update.hasCallbackQuery()) {
+        if (update.hasMessage()) {
+            // Обработка обычных сообщений
             telegramController.handleUpdate(update);
+        } else if (update.hasCallbackQuery()) {
+            // Обработка callback-запросов
+            CallbackQuery callbackQuery = update.getCallbackQuery();
+            String data = callbackQuery.getData();
+
+        } else {
+            // Обработка других callback-запросов
+            telegramController.handleUpdate(update);
+
         }
     }
-
-
 }
 

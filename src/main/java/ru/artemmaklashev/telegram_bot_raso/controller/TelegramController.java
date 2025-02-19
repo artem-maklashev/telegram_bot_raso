@@ -9,19 +9,13 @@ import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import ru.artemmaklashev.telegram_bot_raso.buttons.Button;
 import ru.artemmaklashev.telegram_bot_raso.buttons.Buttons;
-import ru.artemmaklashev.telegram_bot_raso.charts.SampleCgart;
 import ru.artemmaklashev.telegram_bot_raso.controller.gypsumboard.GypsumBoardController;
-import ru.artemmaklashev.telegram_bot_raso.entity.delays.BoardDelays;
-import ru.artemmaklashev.telegram_bot_raso.entity.delays.Delays;
-import ru.artemmaklashev.telegram_bot_raso.entity.gypsumboard.GypsumBoard;
-import ru.artemmaklashev.telegram_bot_raso.entity.production.BoardProduction;
-import ru.artemmaklashev.telegram_bot_raso.service.report.ASCIItable;
-import ru.artemmaklashev.telegram_bot_raso.service.report.ASCIItableImage;
-import ru.artemmaklashev.telegram_bot_raso.service.reportServices.gypsumBoard.GypsymBoardReportService;
+import ru.artemmaklashev.telegram_bot_raso.service.telegram.TelegramUserService;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -30,9 +24,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 
 @Component
@@ -44,11 +35,13 @@ public class TelegramController {
     private final RestTemplate restTemplate;
 //    private final GypsymBoardReportService gypsymBoardReportService;
     private final GypsumBoardController gypsumBoardController;
+    private final TelegramUserService userService;
 
-    public TelegramController(TelegramClient client, RestTemplate restTemplate,  GypsumBoardController gypsumBoardController) {
+    public TelegramController(TelegramClient client, RestTemplate restTemplate, GypsumBoardController gypsumBoardController, TelegramUserService userService) {
         this.client = client;
         this.restTemplate = restTemplate;
         this.gypsumBoardController = gypsumBoardController;
+        this.userService = userService;
     }
 
     /**
@@ -59,12 +52,35 @@ public class TelegramController {
 
         if (update.hasMessage() && update.getMessage().hasText()) {
             var user = update.getMessage().getFrom();
-            handleTextCommand(update);
+            System.out.println("Получен текст от пользователя " + user.getFirstName() + " " + user.getLastName() + " (" + user.getId() + "): " + update.getMessage().getText());
+            if (userApproved(user)) {
+                handleTextCommand(update);
+            }
+            else {
+                sendNotApprovedMessage(update);
+            }
         } else if (update.hasCallbackQuery()) {
             handleCallback(update);
         } else {
             System.out.println("Неизвестный тип обновления");
         }
+    }
+
+    private boolean userApproved(User user) {
+        return userService.isKnownUser(user.getId());
+    }
+
+    private void sendNotApprovedMessage(Update update) {
+        sendNewMessage(update.getMessage().getChatId().toString(), "Вы не подтверждены входом в систему.");
+        sendNewMessage(update.getMessage().getChatId().toString(), "Для продолжения работы, подайте запрос на подтверждение.");
+        Long chatId = update.getMessage().getChatId();
+        var approvedKeyboard = userService.approvedRequest(chatId, client);
+        SendMessage message = SendMessage.builder()
+                .chatId(chatId)
+                .text("Нажмите кнопку для запроса доступа к боту")
+                .replyMarkup(approvedKeyboard)
+                .build();
+        executeMessage(message);
     }
 
 
@@ -104,7 +120,11 @@ public class TelegramController {
                         ("*Выпуск продукции за " + LocalDate.now().minusDays(1L).format(DateTimeFormatter.ISO_LOCAL_DATE)+"*\n")
                                 .replace("-", "\\-"));
                 sendNewMessage(chatId, report);
-            } else {
+            } else if ("approve".equalsIgnoreCase(callbackData)) {
+                var user = update.getCallbackQuery().getFrom();
+                var approvingResult = userService.approveUser(user, chatId, client);
+            }
+            else {
                 editMessage(chatId, messageId, "Неизвестное действие.");
             }
         } catch (Exception e) {
@@ -178,7 +198,7 @@ public class TelegramController {
         try {
             Long longChatId = Long.parseLong(chatId);
             Button button = new Button("Отчет по ГСП", "gypsumBoardReport");
-            Buttons buttons = new Buttons(longChatId, telegramClient);
+            Buttons buttons = new Buttons();
             buttons.addButton(button, 1);
             InlineKeyboardMarkup markup = buttons.build();
             System.out.println("Клавиатура создана успешно");
