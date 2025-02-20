@@ -62,24 +62,28 @@ public class TelegramController {
         if (text.startsWith("/")) {
             // Обрабатываем команды через CommandHandler
             SendMessage commandResponse = commandHandler.handleCommand(chatId, text);
-            messageService.sendMessage(chatId, commandResponse.getText());
+            messageService.sendMessage(chatId, commandResponse);
         } else {
             // Если это не команда, проверяем подтверждение пользователя
             if (userApproved(user)) {
-                messageService.sendMessage(chatId, text);
+                messageService.sendMessage(chatId, SendMessage.builder().chatId(chatId).text(text).build());
             } else {
-                messageService.sendMessage(chatId, "Вы не подтверждены входом в систему.");
+                messageService.sendMessage(chatId, SendMessage.builder().chatId(chatId).text(user.getFirstName() + ", Вы не зарегистрированы в боте!").build());
             }
         }
     }
 
 
     private void handleCallback(Update update) {
-        BotApiMethod<?> response = callbackHandler.handleCallback(update);
-        if (response != null) {
-            messageService.executeMessage(response);
+        Object response = callbackHandler.handleCallback(update);
+
+        if (response instanceof BotApiMethod<?>) {
+            messageService.executeMessage((BotApiMethod<?>) response);
+        } else if (response instanceof SendPhoto) {
+            messageService.sendImage((SendPhoto) response); // Отправка изображения
         }
     }
+
 
     private boolean userApproved(User user) {
         return userService.isKnownUser(user.getId());

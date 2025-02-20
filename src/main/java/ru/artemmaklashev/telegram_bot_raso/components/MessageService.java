@@ -26,33 +26,31 @@ public class MessageService {
         this.config = config;
     }
 
-    public void sendMessage(String chatId, String text) {
-        SendMessage message = SendMessage.builder()
-                .chatId(chatId)
-                .text(text)
-                .parseMode("HTML")
-                .build();
+    public void sendMessage(String chatId, SendMessage message) {
+//        SendMessage message = SendMessage.builder()
+//                .chatId(chatId)
+//                .text(text)
+//                .parseMode("HTML")
+//                .build();
         executeMessage(message);
     }
 
-    public void sendImage(String chatId, BufferedImage image, String caption) {
-        try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ImageIO.write(image, "png", baos);
-            ByteArrayInputStream inputStream = new ByteArrayInputStream(baos.toByteArray());
-            InputFile photoFile = new InputFile(inputStream, "chart.png");
+    public void sendImage(SendPhoto photo) {
 
-            SendPhoto message = SendPhoto.builder()
-                    .chatId(chatId)
-                    .photo(photoFile)
-                    .caption(caption)
-                    .parseMode("MarkdownV2")
-                    .build();
+//            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+//            ImageIO.write(image, "png", baos);
+//            ByteArrayInputStream inputStream = new ByteArrayInputStream(baos.toByteArray());
+//            InputFile photoFile = new InputFile(inputStream, "chart.png");
+//
+//            SendPhoto message = SendPhoto.builder()
+//                    .chatId(chatId)
+//                    .photo(photoFile)
+//                    .caption(caption)
+//                    .parseMode("MarkdownV2")
+//                    .build();
 
-            executeImage(message);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+            executeImage(photo);
+
     }
 
     public void executeMessage(BotApiMethod<?> message) {

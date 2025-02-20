@@ -10,10 +10,7 @@ import org.telegram.telegrambots.meta.generics.TelegramClient;
 import ru.artemmaklashev.telegram_bot_raso.buttons.Button;
 import ru.artemmaklashev.telegram_bot_raso.buttons.Buttons;
 import ru.artemmaklashev.telegram_bot_raso.config.TelegramConfig;
-import ru.artemmaklashev.telegram_bot_raso.controller.TelegramController;
-import ru.artemmaklashev.telegram_bot_raso.controller.TelegramUserController;
 import ru.artemmaklashev.telegram_bot_raso.repositories.telegram.TelegramUserRepository;
-import ru.artemmaklashev.telegram_bot_raso.service.gypsumboard.TelegramNotificationSender;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
