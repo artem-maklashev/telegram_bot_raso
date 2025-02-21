@@ -53,16 +53,31 @@ public class CallbackHandler {
     }
 
     private Object handleDryMixReport(String chatId, int messageId) {
+
         String report = dryMixController.getDelaysData();
+        BufferedImage image = dryMixController.getImageReport();
+        return draw(report, image, chatId, messageId);
     }
 
     public Object handleGypsumBoardReport(String chatId, int messageId) {
-        try {
-            // Получаем отчет и изображение
-            String report = gypsumBoardController.getReportData();
-            BufferedImage image = gypsumBoardController.getImageReport();
+        // Получаем отчет и изображение
+        String report = gypsumBoardController.getReportData();
+        BufferedImage image = gypsumBoardController.getImageReport();
+        return draw(report, image, chatId, messageId);
+    }
 
-            // Конвертируем BufferedImage в InputStream
+    private EditMessageText handleApprove(Update update, String chatId) {
+        var user = update.getCallbackQuery().getFrom();
+        userService.approveUser(user, chatId);
+        return EditMessageText.builder()
+                .chatId(chatId)
+                .messageId(update.getCallbackQuery().getMessage().getMessageId())
+                .text("Запрос отправлен")
+                .build();
+    }
+
+    private Object draw(String report, BufferedImage image, String chatId, int messageId) {
+        try {
             ByteArrayOutputStream os = new ByteArrayOutputStream();
             ImageIO.write(image, "png", os);
             InputStream is = new ByteArrayInputStream(os.toByteArray());
@@ -111,16 +126,6 @@ public class CallbackHandler {
                     .text("Произошла ошибка при формировании отчета.")
                     .build();
         }
-    }
-
-    private EditMessageText handleApprove(Update update, String chatId) {
-        var user = update.getCallbackQuery().getFrom();
-        userService.approveUser(user, chatId);
-        return EditMessageText.builder()
-                .chatId(chatId)
-                .messageId(update.getCallbackQuery().getMessage().getMessageId())
-                .text("Запрос отправлен")
-                .build();
     }
 }
 

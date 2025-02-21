@@ -1,8 +1,11 @@
 package ru.artemmaklashev.telegram_bot_raso.repositories.drymix;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import ru.artemmaklashev.telegram_bot_raso.entity.delays.BoardDelays;
 import ru.artemmaklashev.telegram_bot_raso.entity.dryMix.production.MixProduction;
+import ru.artemmaklashev.telegram_bot_raso.entity.production.BoardProduction;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -12,4 +15,5 @@ public interface MixProductionRepository extends JpaRepository<MixProduction, Lo
 
 
     List<MixProduction> findAllByProductionDateBetween(LocalDateTime start, LocalDateTime end);
+
 }

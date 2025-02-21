@@ -2,9 +2,19 @@ package ru.artemmaklashev.telegram_bot_raso.controller.drymix;
 
 import org.springframework.stereotype.Component;
 import ru.artemmaklashev.telegram_bot_raso.entity.delays.BoardDelays;
+import ru.artemmaklashev.telegram_bot_raso.entity.dryMix.DryMix;
 import ru.artemmaklashev.telegram_bot_raso.entity.dryMix.delays.MixDelay;
+import ru.artemmaklashev.telegram_bot_raso.entity.dryMix.production.MixCategoryProduction;
+import ru.artemmaklashev.telegram_bot_raso.entity.dryMix.production.MixProduction;
+import ru.artemmaklashev.telegram_bot_raso.entity.gypsumboard.GypsumBoard;
+import ru.artemmaklashev.telegram_bot_raso.entity.production.BoardProduction;
+import ru.artemmaklashev.telegram_bot_raso.service.report.ASCIItable;
+import ru.artemmaklashev.telegram_bot_raso.service.report.ASCIItableImage;
 import ru.artemmaklashev.telegram_bot_raso.service.reportServices.drymix.DryMixReportService;
 
+import java.awt.image.BufferedImage;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -40,5 +50,43 @@ public class DryMixController {
         result.forEach((key, value) -> sb.append(key).append(": ").append(value).append("мин\n"));
 
         return sb.toString();
+    }
+
+    private String formatMixProductions(List<MixCategoryProduction> productions) {
+
+        if (productions.isEmpty()) {
+            return "Нет выпуска за указанную дату";
+        }
+        Map<String, Integer> result = fetchMixData(productions);
+        String resultTable = new ASCIItable(result, List.of("Продукция", "Кол-во")).drawTable();
+        String totalValue = String.format("%.0f",productions.stream().mapToDouble(MixCategoryProduction::getQuantity).sum());
+        return "**Выпуск продукции за " + LocalDate.now().minusDays(1L).format(DateTimeFormatter.ISO_LOCAL_DATE)+"**\n" +
+                resultTable + "\n" + "**Итого: " + totalValue + " м"+"²**";
+    }
+
+    private Map<String, Integer> fetchMixData(List<MixCategoryProduction> productions) {
+        return productions.stream()
+                .collect(Collectors.toMap(
+                        production -> {
+                            DryMix mix = production.getProduction().getMix();
+                            return mix.getName();
+                        },
+                        production -> Math.round(production.getQuantity()),  // Преобразуем float в int, чтобы отбросить дробную часть
+                        Integer::sum
+                ));
+    }
+
+    public BufferedImage getImageReport() {
+        List<MixCategoryProduction> productions = dryMixReportService.getLastProductions().stream()
+                .filter(mixproduction -> mixproduction.getCategory().getId()  == 2)
+                .toList();
+        if (productions.isEmpty()) {
+            return null;
+        }
+
+        // Собираем данные в Map, где ключ — это описание продукции, а значение — её количество
+
+        Map<String, Integer> result = fetchMixData(productions);;
+        return new ASCIItableImage(result, List.of("Продукция", "Кол-во")).drawTable();
     }
 }
