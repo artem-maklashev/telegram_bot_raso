@@ -7,6 +7,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import ru.artemmaklashev.telegram_bot_raso.controller.drymix.DryMixController;
 import ru.artemmaklashev.telegram_bot_raso.controller.gypsumboard.GypsumBoardController;
 import ru.artemmaklashev.telegram_bot_raso.service.telegram.TelegramUserService;
 
@@ -15,14 +16,19 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 @Component
 public class CallbackHandler {
     private final GypsumBoardController gypsumBoardController;
+    private final DryMixController dryMixController;
     private final TelegramUserService userService;
 
-    public CallbackHandler(GypsumBoardController gypsumBoardController, TelegramUserService userService) {
+    public CallbackHandler(GypsumBoardController gypsumBoardController, DryMixController dryMixController, TelegramUserService userService) {
         this.gypsumBoardController = gypsumBoardController;
+        this.dryMixController = dryMixController;
         this.userService = userService;
     }
 
@@ -33,8 +39,10 @@ public class CallbackHandler {
 
         if ("gypsumBoardReport".equalsIgnoreCase(callbackData)) {
             return handleGypsumBoardReport(chatId, messageId);
-        } else if ("approve".equalsIgnoreCase(callbackData)) {
+        } else if (callbackData.startsWith("approve")) {
             return handleApprove(update, chatId);
+        } else if ("dryMixReport".equalsIgnoreCase(callbackData)) {
+            return handleDryMixReport(chatId, messageId);
         } else {
             return EditMessageText.builder()
                     .chatId(chatId)
@@ -42,6 +50,10 @@ public class CallbackHandler {
                     .text("Неизвестное действие.")
                     .build();
         }
+    }
+
+    private Object handleDryMixReport(String chatId, int messageId) {
+        String report = dryMixController.getDelaysData();
     }
 
     public Object handleGypsumBoardReport(String chatId, int messageId) {
@@ -57,12 +69,32 @@ public class CallbackHandler {
 
             // Создаем InputFile для отправки изображения
             InputFile photo = new InputFile(is, "report.png");
-
+            String header = "Выпуск продукции за " + LocalDate.now().minusDays(1L)
+                    .format(DateTimeFormatter.ofPattern("dd.MM.yyyy", new Locale("ru")));
+            String escapedText = header.replace("*", "\\*")
+                    .replace("_", "\\_")
+                    .replace("[", "\\[")
+                    .replace("]", "\\]")
+                    .replace("(", "\\(")
+                    .replace(")", "\\)")
+                    .replace("~", "\\~")
+                    .replace("`", "\\`")
+                    .replace(">", "\\>")
+                    .replace("#", "\\#")
+                    .replace("+", "\\+")
+                    .replace("-", "\\-")
+                    .replace("=", "\\=")
+                    .replace("|", "\\|")
+                    .replace("{", "\\{")
+                    .replace("}", "\\}")
+                    .replace(".", "\\.")
+                    .replace("!", "\\!");
+            userService.sendMessage(chatId, "*" + escapedText + "*");
             // Создаем сообщение с изображением и подписью
             SendPhoto sendPhoto = SendPhoto.builder()
                     .chatId(chatId)
                     .photo(photo)
-                    .caption("Вы запросили отчет по ГСП:\n" + report) // Подпись под изображением
+                    .caption(report) // Подпись под изображением
                     .build();
 
             // Закрываем ресурсы
@@ -83,11 +115,11 @@ public class CallbackHandler {
 
     private EditMessageText handleApprove(Update update, String chatId) {
         var user = update.getCallbackQuery().getFrom();
-        boolean approved = userService.approveUser(user, chatId, null);
+        userService.approveUser(user, chatId);
         return EditMessageText.builder()
                 .chatId(chatId)
                 .messageId(update.getCallbackQuery().getMessage().getMessageId())
-                .text(approved ? "Вы успешно подтверждены!" : "Ошибка подтверждения.")
+                .text("Запрос отправлен")
                 .build();
     }
 }

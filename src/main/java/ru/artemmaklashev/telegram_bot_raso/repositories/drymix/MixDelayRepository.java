@@ -11,4 +11,6 @@ public interface MixDelayRepository extends JpaRepository<MixDelay, Long> {
     List<MixDelay> findByMixProductionId(Long productionId);
 
     List<MixDelay> findAllByMixProductionProductionDateBetween(LocalDateTime start, LocalDateTime end);
+
+    List<MixDelay> findAllByMixProductionProductionDate(LocalDateTime date);
 }

@@ -50,7 +50,8 @@ public class Bot implements SpringLongPollingBot, LongPollingSingleThreadUpdateC
             // Обработка callback-запросов
             CallbackQuery callbackQuery = update.getCallbackQuery();
             String data = callbackQuery.getData();
-            if ("authorize".equals(data) || "deny".equals(data)) {
+            if (data.startsWith("authorize_") || data.startsWith("deny_")) {
+                System.out.println("Перенаправление  на обработку запроса в TelegramUserService");
                 telegramUserService.handleCallbackQuery(callbackQuery); // Передаем управление вашему обработчику
             } else {
                 // Обработка других callback-запросов

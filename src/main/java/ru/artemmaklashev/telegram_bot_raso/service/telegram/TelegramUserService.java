@@ -1,6 +1,7 @@
 package ru.artemmaklashev.telegram_bot_raso.service.telegram;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.User;
@@ -9,7 +10,10 @@ import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import ru.artemmaklashev.telegram_bot_raso.buttons.Button;
 import ru.artemmaklashev.telegram_bot_raso.buttons.Buttons;
+import ru.artemmaklashev.telegram_bot_raso.components.Keyboards;
+import ru.artemmaklashev.telegram_bot_raso.components.MessageService;
 import ru.artemmaklashev.telegram_bot_raso.config.TelegramConfig;
+import ru.artemmaklashev.telegram_bot_raso.model.TelegramUser;
 import ru.artemmaklashev.telegram_bot_raso.repositories.telegram.TelegramUserRepository;
 
 import java.util.List;
@@ -19,90 +23,90 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class TelegramUserService {
     private final TelegramUserRepository telegramUserRepository;
-    private final TelegramClient telegramClient;
+    private final Keyboards keyboards;
+    private final MessageService messageService;
     public final ConcurrentHashMap<String, CompletableFuture<Boolean>> pendingApprovals = new ConcurrentHashMap<>();
 
-    public TelegramUserService(TelegramUserRepository telegramUserRepository, TelegramClient telegramClient) {
+    public TelegramUserService(TelegramUserRepository telegramUserRepository, Keyboards keyboards, MessageService messageService) {
         this.telegramUserRepository = telegramUserRepository;
-
-        this.telegramClient = telegramClient;
+        this.keyboards = keyboards;
+        this.messageService = messageService;
     }
 
     public boolean isKnownUser(Long userId) {
         return telegramUserRepository.existsByTelegramId(userId);
     }
 
-    public InlineKeyboardMarkup approvedRequest() {
+    public void approveUser(User user, String chatId) {
         try {
-            Button button = new Button("Запросить доступ", "approve");
-            Buttons buttons = new Buttons();
-            buttons.addButton(button, 1);
-            InlineKeyboardMarkup markup = buttons.build();
-            System.out.println("Клавиатура запроса доступа успешно создана");
-            return markup;
-        } catch (NumberFormatException e) {
-            System.out.println("Ошибка преобразования chatId: " + e.getMessage());
-        }
-        return null;
-    }
-
-    public boolean approveUser(User user, String chatId, TelegramClient client) {
-        try {
-            Button authorize = new Button("Разрешить", "authorize");
-            Button deny = new Button("Отклонить", "deny");
-            Buttons buttons = new Buttons();
-            buttons.addButton(authorize, 1);
-            buttons.addButton(deny, 1);
-            InlineKeyboardMarkup markup = buttons.build();
-            System.out.println("Клавиатура авторизации пользователя создана успешно");
+            if (!isKnownUser(user.getId())) {
+                TelegramUser telegramUser = new TelegramUser(user.getFirstName(), user.getLastName(), user.getUserName(), user.getId(), Long.parseLong(chatId));
+                telegramUserRepository.save(telegramUser);
+                System.out.println("Пользователь " + user.getFirstName() + " " + user.getLastName() + " добавлен  БД");
+            }
+            InlineKeyboardMarkup markup = keyboards.getApproveKeyboard(user);
             String messageText = user.getFirstName() + " " + user.getLastName() + " запросил доступ";
-            SendMessage message = SendMessage.builder()
-                    .chatId(chatId)
-                    .text(messageText)
-                    .replyMarkup(markup)
-                    .build();
-            sendAdminMessage(message);// Создаем CompletableFuture для ожидания ответа
-            CompletableFuture<Boolean> future = new CompletableFuture<>();
-            pendingApprovals.put(chatId, future);
+            messageService.sendAdminMessage(messageText, markup);// Создаем CompletableFuture для ожидания ответа
+//            CompletableFuture<Boolean> future = new CompletableFuture<>();
+//            pendingApprovals.put(chatId, future);
 
             // Ждем ответа
-            return future.get();
+//            return future.get();
         } catch (Exception e) {
             e.printStackTrace();
-            return false;
+//            return false;
         }
     }
 
     // Метод для обработки callback-запросов
     public void handleCallbackQuery(CallbackQuery callbackQuery) {
         String chatId = callbackQuery.getMessage().getChatId().toString();
-        String data = callbackQuery.getData(); // "authorize" или "deny"
+        String data = callbackQuery.getData();
 
-        CompletableFuture<Boolean> future = pendingApprovals.get(chatId);
-        if (future != null) {
-            if ("authorize".equals(data)) {
-                future.complete(true); // Пользователь разрешил
-            } else if ("deny".equals(data)) {
-                future.complete(false); // Пользователь отклонил
+//        CompletableFuture<Boolean> future = pendingApprovals.get(chatId);
+//        if (future != null) {
+            if (data.startsWith("authorize_")) {
+                long userId = Long.parseLong(data.substring("authorize_".length())); // Получаем userId
+//                future.complete(true);
+                messageService.sendAdminMessage("✅ Доступ одобрен пользователю с ID: " + userId);
+                TelegramUser telegramUser = telegramUserRepository.findByTelegramId(userId);
+                if (telegramUser != null) {
+                    telegramUser.setApproved(true);
+                    telegramUserRepository.save(telegramUser);
+                    System.out.println("�� Доступ одобрен пользователю с ID: " + userId);
+                } else {
+                    System.out.println("⚠ Ошибка: пользователь с ID " + userId + " не найден в БД.");
+                }
+            } else if (data.startsWith("deny_")) {
+                long userId = Long.parseLong(data.substring("deny_".length())); // Получаем userId
+//                future.complete(false);
+                messageService.sendAdminMessage("⛔ Доступ отклонен пользователю с ID: " + userId);
             }
-            pendingApprovals.remove(chatId); // Удаляем из ожидания
-        }
+//            pendingApprovals.remove(chatId);
+//        }
     }
 
-    public void sendAdminMessage(SendMessage message) {
-        try {
-        List<String> chatIds = new TelegramConfig().getNotification().getChatIds();
-        for (String chatId : chatIds) {
-            SendMessage newMessage = SendMessage.builder()
-                    .chatId(chatId)
-                    .text(message.getText())
-                    .replyMarkup(message.getReplyMarkup())
-                    .build();
+    public boolean isApproved(Long id) {
+        return telegramUserRepository.existsByTelegramIdAndApproved(id, true);
+    }
 
-            telegramClient.execute(newMessage); // Отправляем сообщение через TelegramController
-        }
-    } catch (TelegramApiException e) {
-        e.printStackTrace();}
+    public void userApproveRequest(Long chatId) {
+        InlineKeyboardMarkup markup = keyboards.getUserApproveKeyboard(); // Создаем InlineKeyboardMarkup;
+        SendMessage sendMessage = SendMessage.builder()
+                .chatId(chatId)
+                .replyMarkup(markup)
+                .text("Вы хотите получить доступ к боту?")
+                .build();
+        messageService.sendMessage(sendMessage);
+    }
+
+    public void sendMessage(String chatId, String s) {
+        SendMessage sendMessage = SendMessage.builder()
+                .chatId(chatId)
+                .text(s)
+                .parseMode("MarkdownV2")
+                .build();
+        messageService.sendMessage(sendMessage);
     }
 }
 

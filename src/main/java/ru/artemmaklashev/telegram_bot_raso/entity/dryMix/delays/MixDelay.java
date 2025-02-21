@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import ru.artemmaklashev.telegram_bot_raso.entity.dryMix.production.MixProduction;
 
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 
 @Entity
@@ -37,5 +38,9 @@ public class MixDelay {
     @ManyToOne
     @JoinColumn(name = "mix_unit_part_id")
     private MixUnitPart mixUnitPart;
+
+    public Long getDuration() {
+        return Duration.between(delayStart, delayEnd).getSeconds()/60;
+    }
 
 }

@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import org.telegram.telegrambots.meta.api.methods.botapimethods.BotApiMethod;
 import ru.artemmaklashev.telegram_bot_raso.config.TelegramConfig;
@@ -26,7 +27,7 @@ public class MessageService {
         this.config = config;
     }
 
-    public void sendMessage(String chatId, SendMessage message) {
+    public void sendMessage(SendMessage message) {
 //        SendMessage message = SendMessage.builder()
 //                .chatId(chatId)
 //                .text(text)
@@ -66,6 +67,19 @@ public class MessageService {
             client.execute(message);
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public void sendAdminMessage(String text, InlineKeyboardMarkup keyboard) {
+        List<String> chatIds = config.getNotification().getChatIds();
+        for (String chatId : chatIds) {
+            SendMessage message = SendMessage.builder()
+                    .chatId(chatId)
+                    .text(text)
+                    .replyMarkup(keyboard)
+                    .parseMode("HTML")
+                    .build();
+            executeMessage(message);
         }
     }
 

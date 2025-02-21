@@ -28,14 +28,21 @@ public class TelegramUser {
     @Column
     private Long telegramId;
 
+    @Column
+    private Long chatId;
+
+    @Column
+    private boolean approved;
+
     // Конструкторы
     public TelegramUser() {}
 
-    public TelegramUser(String firstName, String lastName, String username, Long telegramId) {
+    public TelegramUser(String firstName, String lastName, String username, Long telegramId, Long chatId) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.username = username;
         this.telegramId = telegramId;
+        this.chatId = chatId;
     }
 
     // Геттеры и сеттеры
