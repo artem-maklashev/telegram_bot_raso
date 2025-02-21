@@ -30,10 +30,8 @@ public class GypsumBoardController {
                 .filter(boardProduction -> boardProduction.getCategory().getId()  > 1 && boardProduction.getCategory().getId() <=4)
                 .toList();
         List<BoardDelays> delays = gypsymBoardReportService.getLastDelays();
-        String boardProductions = formatBoardProductions(productions);
-        String boardDelays = formatBoardDelays(delays);
 
-        return boardDelays ;
+        return formatBoardDelays(delays);
     }
 
     private String formatBoardDelays(List<BoardDelays> delays) {
@@ -59,28 +57,28 @@ public class GypsumBoardController {
 
 
 
-    private String formatBoardProductions(List<BoardProduction> productions) {
-        if (productions.isEmpty()) {
-            return "Нет выпуска за указанную дату";
-        }
-
-        // Собираем данные в Map, где ключ — это описание продукции, а значение — её количество
-        Map<String, Integer> result = fetchBoardData(productions);;
-        String resultTable = new ASCIItable(result, List.of("Продукция", "Кол-во")).drawTable();
-
-        // Вычисление общей суммы выпуска
-        String totalValue = String.format("%.0f",productions.stream().mapToDouble(BoardProduction::getValue).sum());
-
-        // Формирование итоговой строки с добавлением суммы
-//        String resultString = result.entrySet().stream()
-//                .map(entry -> entry.getKey() + ": " + entry.getValue())
-//                .collect(Collectors.joining("\n", "**Выпуск продукции за " +
-//                        LocalDate.now().minusDays(1L).format(DateTimeFormatter.ISO_LOCAL_DATE) + ":**\n", "\n\n**Итого: " + totalValue + " м"+"\u00B2**" ));
-        String resultString = "**Выпуск продукции за " + LocalDate.now().minusDays(1L).format(DateTimeFormatter.ISO_LOCAL_DATE)+"**\n" +
-                resultTable + "\n" + "**Итого: " + totalValue + " м"+"²**";
-        return resultString  ;
-
-    }
+//    private String formatBoardProductions(List<BoardProduction> productions) {
+//        if (productions.isEmpty()) {
+//            return "Нет выпуска за указанную дату";
+//        }
+//
+//        // Собираем данные в Map, где ключ — это описание продукции, а значение — её количество
+//        Map<String, Integer> result = fetchBoardData(productions);;
+//        String resultTable = new ASCIItable(result, List.of("Продукция", "Кол-во")).drawTable();
+//
+//        // Вычисление общей суммы выпуска
+//        String totalValue = String.format("%.0f",productions.stream().mapToDouble(BoardProduction::getValue).sum());
+//
+//        // Формирование итоговой строки с добавлением суммы
+////        String resultString = result.entrySet().stream()
+////                .map(entry -> entry.getKey() + ": " + entry.getValue())
+////                .collect(Collectors.joining("\n", "**Выпуск продукции за " +
+////                        LocalDate.now().minusDays(1L).format(DateTimeFormatter.ISO_LOCAL_DATE) + ":**\n", "\n\n**Итого: " + totalValue + " м"+"\u00B2**" ));
+//        String resultString = "**Выпуск продукции за " + LocalDate.now().minusDays(1L).format(DateTimeFormatter.ISO_LOCAL_DATE)+"**\n" +
+//                resultTable + "\n" + "**Итого: " + totalValue + " м"+"²**";
+//        return resultString  ;
+//
+//    }
 
     public Map<String, Integer> fetchBoardData(List<BoardProduction> productions) {
         // Преобразуем float в int, чтобы отбросить дробную часть

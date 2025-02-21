@@ -52,17 +52,17 @@ public class DryMixController {
         return sb.toString();
     }
 
-    private String formatMixProductions(List<MixCategoryProduction> productions) {
-
-        if (productions.isEmpty()) {
-            return "Нет выпуска за указанную дату";
-        }
-        Map<String, Integer> result = fetchMixData(productions);
-        String resultTable = new ASCIItable(result, List.of("Продукция", "Кол-во")).drawTable();
-        String totalValue = String.format("%.0f",productions.stream().mapToDouble(MixCategoryProduction::getQuantity).sum());
-        return "**Выпуск продукции за " + LocalDate.now().minusDays(1L).format(DateTimeFormatter.ISO_LOCAL_DATE)+"**\n" +
-                resultTable + "\n" + "**Итого: " + totalValue + " м"+"²**";
-    }
+//    private String formatMixProductions(List<MixCategoryProduction> productions) {
+//
+//        if (productions.isEmpty()) {
+//            return "Нет выпуска за указанную дату";
+//        }
+//        Map<String, Integer> result = fetchMixData(productions);
+//        String resultTable = new ASCIItable(result, List.of("Продукция", "Кол-во")).drawTable();
+//        String totalValue = String.format("%.0f",productions.stream().mapToDouble(MixCategoryProduction::getQuantity).sum());
+//        return "**Выпуск продукции за " + LocalDate.now().minusDays(1L).format(DateTimeFormatter.ISO_LOCAL_DATE)+"**\n" +
+//                resultTable + "\n" + "**Итого: " + totalValue + " м"+"²**";
+//    }
 
     private Map<String, Integer> fetchMixData(List<MixCategoryProduction> productions) {
         return productions.stream()
