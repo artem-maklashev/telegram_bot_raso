@@ -1,5 +1,6 @@
 package ru.artemmaklashev.telegram_bot_raso.controller.gypsumboard;
 
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 import ru.artemmaklashev.telegram_bot_raso.entity.delays.BoardDelays;
 import ru.artemmaklashev.telegram_bot_raso.entity.gypsumboard.GypsumBoard;
@@ -14,6 +15,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 @Component
 public class GypsumBoardController {
@@ -47,14 +49,18 @@ public class GypsumBoardController {
                 ));
 
         // Формируем строковое представление для вывода.
+        return getString(result, delays.stream().mapToLong(BoardDelays::getDuration), delays);
+    }
+
+    @NotNull
+    public static String getString(Map<String, Long> result, LongStream longStream, List<BoardDelays> delays) {
         StringBuilder sb = new StringBuilder();
-        sb.append("Простои за указанный период составляют:").append(delays.stream().mapToLong(BoardDelays::getDuration).sum()).append(" мин\n")
+        sb.append("Простои за указанный период составляют:").append(longStream.sum()).append(" мин\n")
                 .append("В том числе:").append("\n");
         result.forEach((key, value) -> sb.append(key).append(": ").append(value).append("мин\n"));
 
         return sb.toString();
     }
-
 
 
 //    private String formatBoardProductions(List<BoardProduction> productions) {
@@ -96,17 +102,21 @@ public class GypsumBoardController {
     }
 
     public BufferedImage getImageReport() {
-        List<BoardProduction> productions = gypsymBoardReportService.getLastProductions().stream()
+        List<BoardProduction> allProductions = gypsymBoardReportService.getLastProductions();
+        List<BoardProduction> totalProductions  = allProductions.stream().filter(boardProduction -> boardProduction.getCategory().getId() == 1).toList();
+        List<BoardProduction> productions = allProductions.stream()
                 .filter(boardProduction -> boardProduction.getCategory().getId()  > 1 && boardProduction.getCategory().getId() <=4)
                 .toList();
         if (productions.isEmpty()) {
             return null;
         }
-
+        Double totalValue = totalProductions.stream().mapToDouble(BoardProduction::getValue).sum();
+        Double goodValue = productions.stream().mapToDouble(BoardProduction::getValue).sum();
+        Double defectPercent = (totalValue - goodValue) / totalValue * 100;
         // Собираем данные в Map, где ключ — это описание продукции, а значение — её количество
 
         Map<String, Integer> result = fetchBoardData(productions);;
-        return new ASCIItableImage(result, List.of("Продукция", "Кол-во")).drawTable();
+        return new ASCIItableImage(result, List.of("Продукция", "Кол-во"), defectPercent).drawTable();
     }
 
 }

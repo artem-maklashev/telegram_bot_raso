@@ -1,23 +1,19 @@
 package ru.artemmaklashev.telegram_bot_raso.controller.drymix;
 
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 import ru.artemmaklashev.telegram_bot_raso.entity.delays.BoardDelays;
 import ru.artemmaklashev.telegram_bot_raso.entity.dryMix.DryMix;
 import ru.artemmaklashev.telegram_bot_raso.entity.dryMix.delays.MixDelay;
 import ru.artemmaklashev.telegram_bot_raso.entity.dryMix.production.MixCategoryProduction;
-import ru.artemmaklashev.telegram_bot_raso.entity.dryMix.production.MixProduction;
-import ru.artemmaklashev.telegram_bot_raso.entity.gypsumboard.GypsumBoard;
-import ru.artemmaklashev.telegram_bot_raso.entity.production.BoardProduction;
-import ru.artemmaklashev.telegram_bot_raso.service.report.ASCIItable;
 import ru.artemmaklashev.telegram_bot_raso.service.report.ASCIItableImage;
 import ru.artemmaklashev.telegram_bot_raso.service.reportServices.drymix.DryMixReportService;
 
 import java.awt.image.BufferedImage;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
 @Component
 public class DryMixController {
@@ -44,8 +40,13 @@ public class DryMixController {
                         Long::sum
                 ));
         // Формируем строковое представление для вывода.
+        return getString(result, delays.stream().mapToLong(MixDelay::getDuration), delays);
+    }
+
+    @NotNull
+    public static String getString(Map<String, Long> result, LongStream longStream, List<MixDelay> delays) {
         StringBuilder sb = new StringBuilder();
-        sb.append("Простои за указанный период составляют:").append(delays.stream().mapToLong(MixDelay::getDuration).sum()).append(" мин\n")
+        sb.append("Простои за указанный период составляют:").append(longStream.sum()).append(" мин\n")
                 .append("В том числе:").append("\n");
         result.forEach((key, value) -> sb.append(key).append(": ").append(value).append("мин\n"));
 

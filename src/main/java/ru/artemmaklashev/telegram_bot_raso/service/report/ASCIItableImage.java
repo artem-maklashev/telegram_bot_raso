@@ -3,19 +3,24 @@ package ru.artemmaklashev.telegram_bot_raso.service.report;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import javax.imageio.ImageIO;
 
 public class ASCIItableImage {
     private Map<String, Integer> tableData;
     private List<String> tableHeaders;
+    private Double defectPercent;
+
+    public ASCIItableImage(Map<String, Integer> tableData, List<String> tableHeaders, Double defectPercent) {
+        this.tableData = tableData;
+        this.tableHeaders = tableHeaders;
+        this.defectPercent = defectPercent;
+    }
 
     public ASCIItableImage(Map<String, Integer> tableData, List<String> tableHeaders) {
         this.tableData = tableData;
         this.tableHeaders = tableHeaders;
+        this.defectPercent = 0d;
     }
 
     public BufferedImage drawTable() {
@@ -49,7 +54,11 @@ public class ASCIItableImage {
             y += rowHeight;
         }
         String total = "Итого: " + tableData.values().stream().mapToInt(Integer::intValue).sum();
-        g.drawString(total, x, y+ + rowHeight);
+        g.drawString(total, x, y+ rowHeight);
+        if (defectPercent!=0) {
+        String defectPercentStr = "Количество дефектов: " + String.format("%.2f",defectPercent) + " %";
+        g.drawString(defectPercentStr, x, y+ 2*rowHeight);
+        }
         // Завершаем рисование
         g.dispose();
 
