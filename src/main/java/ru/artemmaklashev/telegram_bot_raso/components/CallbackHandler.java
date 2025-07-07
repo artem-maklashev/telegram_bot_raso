@@ -43,13 +43,21 @@ public class CallbackHandler {
             return handleApprove(update, chatId);
         } else if ("dryMixReport".equalsIgnoreCase(callbackData)) {
             return handleDryMixReport(chatId, messageId);
-        } else {
+        } else if ("gypsumBoardTable".equalsIgnoreCase(callbackData)) {
+            return handleGypsumBoardTable(chatId, messageId);
+        }
+        else {
             return EditMessageText.builder()
                     .chatId(chatId)
                     .messageId(messageId)
                     .text("Неизвестное действие.")
                     .build();
         }
+    }
+
+    private Object handleGypsumBoardTable(String chatId, int messageId) {
+        Loca
+        vat gBoardData = gypsumBoardController.getDataByDate();
     }
 
     private Object handleDryMixReport(String chatId, int messageId) {

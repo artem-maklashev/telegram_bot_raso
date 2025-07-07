@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <style>
+        /* Стили аналогичные предыдущим примерам */
+        .styled-table {
+            border-collapse: collapse;
+            margin: 25px 0;
+            font-size: 0.9em;
+            min-width: 400px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .styled-table thead tr {
+            background-color: #4CAF50;
+            color: white;
+            text-align: left;
+            font-weight: bold;
+        }
+        .styled-table th, .styled-table td {
+            padding: 12px 15px;
+        }
+        .styled-table tbody tr {
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .styled-table tbody tr.even {
+            background-color: #f8f8f8;
+        }
+        .styled-table tbody tr.odd {
+            background-color: white;
+        }
+        .styled-table tbody tr:hover {
+            background-color: #f1f8e9;
+        }
+        .styled-table tbody tr:last-child {
+            border-bottom: 2px solid #4CAF50;
+        }
+        .table-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .title {
+            text-align: center;
+            color: #333;
+            margin: 20px 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+    </style>
+</head>
+<body>
+<h1 th:text="${title}"</h1>
+<table class="styled-table">
+    <thead>
+    <tr th:each="header : ${headers}">
+        <th th:text="${header}"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="item : ${items}">
+        <td th:text="${item.id}"></td>
+        <td th:text="${item.name}"></td>
+        <!-- и так далее -->
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

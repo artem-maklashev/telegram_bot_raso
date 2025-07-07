@@ -1,37 +1,19 @@
 package ru.artemmaklashev.telegram_bot_raso.controller;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 import org.telegram.telegrambots.meta.api.methods.botapimethods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
-import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
-import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
-import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
-import org.telegram.telegrambots.meta.generics.TelegramClient;
-import ru.artemmaklashev.telegram_bot_raso.buttons.Button;
-import ru.artemmaklashev.telegram_bot_raso.buttons.Buttons;
 import ru.artemmaklashev.telegram_bot_raso.components.CallbackHandler;
 import ru.artemmaklashev.telegram_bot_raso.components.CommandHandler;
 import ru.artemmaklashev.telegram_bot_raso.components.Keyboards;
 import ru.artemmaklashev.telegram_bot_raso.components.MessageService;
-import ru.artemmaklashev.telegram_bot_raso.config.TelegramConfig;
-import ru.artemmaklashev.telegram_bot_raso.controller.gypsumboard.GypsumBoardController;
 import ru.artemmaklashev.telegram_bot_raso.model.TelegramUser;
 import ru.artemmaklashev.telegram_bot_raso.service.telegram.TelegramUserService;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayDeque;
-import java.util.List;
 import java.util.Queue;
 
 
@@ -43,7 +25,7 @@ public class TelegramController {
     private final CallbackHandler callbackHandler;
     private final Keyboards keyboards;
 
-    private Queue<TelegramUser> usersToApprove = new ArrayDeque<>();
+    private final Queue<TelegramUser> usersToApprove = new ArrayDeque<>();
 
     public TelegramController(TelegramUserService userService, MessageService messageService,
                               CommandHandler commandHandler, CallbackHandler callbackHandler, Keyboards keyboards) {

@@ -102,7 +102,7 @@ public class GypsumBoardController {
     }
 
     public BufferedImage getImageReport() {
-        List<BoardProduction> allProductions = gypsymBoardReportService.getLastProductions();
+        List<BoardProduction> allProductions = getLastProductions();
         List<BoardProduction> totalProductions  = allProductions.stream().filter(boardProduction -> boardProduction.getCategory().getId() == 1).toList();
         List<BoardProduction> productions = allProductions.stream()
                 .filter(boardProduction -> boardProduction.getCategory().getId()  > 1 && boardProduction.getCategory().getId() <=4)
@@ -110,13 +110,19 @@ public class GypsumBoardController {
         if (productions.isEmpty()) {
             return null;
         }
-        Double totalValue = totalProductions.stream().mapToDouble(BoardProduction::getValue).sum();
-        Double goodValue = productions.stream().mapToDouble(BoardProduction::getValue).sum();
+        double totalValue = totalProductions.stream().mapToDouble(BoardProduction::getValue).sum();
+        double goodValue = productions.stream().mapToDouble(BoardProduction::getValue).sum();
         Double defectPercent = (totalValue - goodValue) / totalValue * 100;
         // Собираем данные в Map, где ключ — это описание продукции, а значение — её количество
 
         Map<String, Integer> result = fetchBoardData(productions);;
         return new ASCIItableImage(result, List.of("Продукция", "Кол-во"), defectPercent).drawTable();
+    }
+
+    private List<BoardProduction> getLastProductions() {
+        if (gypsymBoardReportService.getLastProductions().isEmpty()) {
+            return null;
+        } else return gypsymBoardReportService.getLastProductions();
     }
 
 }

@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import ru.artemmaklashev.telegram_bot_raso.entity.gypsumboard.Plan;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface PlanRepository extends JpaRepository<Plan, Integer> {
@@ -16,4 +17,5 @@ public interface PlanRepository extends JpaRepository<Plan, Integer> {
     List<Plan> findPlansByPlanDateBetween(LocalDate startDate, LocalDate endDate);
 
 
+    List<Plan> findAllByPlanDateBetween(LocalDateTime startDate, LocalDateTime endDate);
 }
