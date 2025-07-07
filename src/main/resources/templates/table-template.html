@@ -51,17 +51,20 @@
     </style>
 </head>
 <body>
-<h1 th:text="${title}"</h1>
+<h1 th:text="${title}"></h1>
 <table class="styled-table">
     <thead>
-    <tr th:each="header : ${headers}">
-        <th th:text="${header}"></th>
+    <tr>
+        <th th:each="header : ${headers}" th:text="${header}"></th>
     </tr>
     </thead>
     <tbody>
     <tr th:each="item : ${items}">
-        <td th:text="${item.id}"></td>
-        <td th:text="${item.name}"></td>
+        <td th:text="${item.getBoardTitle()}"></td>
+        <td th:text="${item.getPlanValue()}"></td>
+        <td th:text="${item.getFactValue()}"></td>
+        <td th:text="${item.getFactValue()-item.getPlanValue()}"></td>
+        <td th:text="${item.getDefectiveValue()*100}"></td>
         <!-- и так далее -->
     </tr>
     </tbody>

@@ -10,10 +10,12 @@ import ru.artemmaklashev.telegram_bot_raso.buttons.Buttons;
 public class Keyboards {
     public InlineKeyboardMarkup getReportKeyboard() {
         Button gypsumBoard = new Button("Отчет по ГСП", "gypsumBoardReport");
+        Button gypsumBoardProduction = new Button("План-факт ГСП", "gypsumBoardTable");
         Button dryMix = new Button("Отчет по сухим смесям", "dryMixReport");
         Buttons buttons = new Buttons();
         buttons.addButton(gypsumBoard, 1);
-        buttons.addButton(dryMix, 2);
+        buttons.addButton(gypsumBoardProduction, 2);
+//        buttons.addButton(dryMix, 2);
         InlineKeyboardMarkup markup = buttons.build();
         System.out.println("Клавиатура создана успешно " + markup);
         return markup;

@@ -1,14 +1,20 @@
 package ru.artemmaklashev.telegram_bot_raso.components;
 
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.methods.botapimethods.BotApiMethod;
+import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring6.SpringTemplateEngine;
 import ru.artemmaklashev.telegram_bot_raso.controller.drymix.DryMixController;
 import ru.artemmaklashev.telegram_bot_raso.controller.gypsumboard.GypsumBoardController;
+import ru.artemmaklashev.telegram_bot_raso.entity.outdata.GypsumBoardProductionData;
+import ru.artemmaklashev.telegram_bot_raso.service.html.HtmlProductionTable;
+import ru.artemmaklashev.telegram_bot_raso.service.reportServices.gypsumBoard.GypsymBoardReportService;
 import ru.artemmaklashev.telegram_bot_raso.service.telegram.TelegramUserService;
 
 import javax.imageio.ImageIO;
@@ -18,6 +24,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Locale;
 
 @Component
@@ -25,11 +32,16 @@ public class CallbackHandler {
     private final GypsumBoardController gypsumBoardController;
     private final DryMixController dryMixController;
     private final TelegramUserService userService;
+    private final GypsymBoardReportService gypsymBoardReportService;
+    private final SpringTemplateEngine templateEngine;
 
-    public CallbackHandler(GypsumBoardController gypsumBoardController, DryMixController dryMixController, TelegramUserService userService) {
+
+    public CallbackHandler(GypsumBoardController gypsumBoardController, DryMixController dryMixController, TelegramUserService userService, GypsymBoardReportService gypsymBoardReportService, @Qualifier("templateEngine") SpringTemplateEngine templateEngine) {
         this.gypsumBoardController = gypsumBoardController;
         this.dryMixController = dryMixController;
         this.userService = userService;
+        this.gypsymBoardReportService = gypsymBoardReportService;
+        this.templateEngine = templateEngine;
     }
 
     public Object handleCallback(Update update) {
@@ -56,8 +68,20 @@ public class CallbackHandler {
     }
 
     private Object handleGypsumBoardTable(String chatId, int messageId) {
-        Loca
-        vat gBoardData = gypsumBoardController.getDataByDate();
+        List<GypsumBoardProductionData> productiondata = gypsymBoardReportService.getProductionsByInterval();
+        if (!productiondata.isEmpty()) {
+            HtmlProductionTable htmlProductionTable = new HtmlProductionTable(templateEngine);
+            String html = htmlProductionTable.render(productiondata);
+            return SendMessage.builder()
+                    .chatId(chatId)
+                    .text("отчет сгенерирован")
+                    .build();
+        } else {
+            return SendMessage.builder()
+                    .chatId(chatId)
+                    .text("Нет данных")
+                    .build();
+        }
     }
 
     private Object handleDryMixReport(String chatId, int messageId) {

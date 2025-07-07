@@ -17,5 +17,5 @@ public interface PlanRepository extends JpaRepository<Plan, Integer> {
     List<Plan> findPlansByPlanDateBetween(LocalDate startDate, LocalDate endDate);
 
 
-    List<Plan> findAllByPlanDateBetween(LocalDateTime startDate, LocalDateTime endDate);
+    List<Plan> findAllByPlanDateBetween(LocalDate startDate, LocalDate endDate);
 }
