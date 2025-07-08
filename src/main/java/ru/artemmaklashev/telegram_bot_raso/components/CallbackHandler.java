@@ -14,6 +14,7 @@ import ru.artemmaklashev.telegram_bot_raso.controller.drymix.DryMixController;
 import ru.artemmaklashev.telegram_bot_raso.controller.gypsumboard.GypsumBoardController;
 import ru.artemmaklashev.telegram_bot_raso.entity.outdata.GypsumBoardProductionData;
 import ru.artemmaklashev.telegram_bot_raso.service.html.HtmlProductionTable;
+import ru.artemmaklashev.telegram_bot_raso.service.html.HtmlToImageConverter;
 import ru.artemmaklashev.telegram_bot_raso.service.reportServices.gypsumBoard.GypsymBoardReportService;
 import ru.artemmaklashev.telegram_bot_raso.service.telegram.TelegramUserService;
 
@@ -21,6 +22,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -34,6 +36,8 @@ public class CallbackHandler {
     private final TelegramUserService userService;
     private final GypsymBoardReportService gypsymBoardReportService;
     private final SpringTemplateEngine templateEngine;
+
+    private final HtmlToImageConverter htmlToImageConverter = new HtmlToImageConverter();
 
 
     public CallbackHandler(GypsumBoardController gypsumBoardController, DryMixController dryMixController, TelegramUserService userService, GypsymBoardReportService gypsymBoardReportService, @Qualifier("templateEngine") SpringTemplateEngine templateEngine) {
@@ -57,8 +61,7 @@ public class CallbackHandler {
             return handleDryMixReport(chatId, messageId);
         } else if ("gypsumBoardTable".equalsIgnoreCase(callbackData)) {
             return handleGypsumBoardTable(chatId, messageId);
-        }
-        else {
+        } else {
             return EditMessageText.builder()
                     .chatId(chatId)
                     .messageId(messageId)
@@ -67,15 +70,35 @@ public class CallbackHandler {
         }
     }
 
-    private Object handleGypsumBoardTable(String chatId, int messageId) {
+    private Object handleGypsumBoardTable(String chatId, int messageId)  {
         List<GypsumBoardProductionData> productiondata = gypsymBoardReportService.getProductionsByInterval();
         if (!productiondata.isEmpty()) {
             HtmlProductionTable htmlProductionTable = new HtmlProductionTable(templateEngine);
             String html = htmlProductionTable.render(productiondata);
-            return SendMessage.builder()
-                    .chatId(chatId)
-                    .text("отчет сгенерирован")
-                    .build();
+            byte[] bytes ;
+            try {
+                bytes = htmlToImageConverter.convertHtmlToImage(html);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+//            return SendMessage.builder()
+//                    .chatId(chatId)
+//                    .text("отчет сгенерирован")
+//                    .build();
+            if (bytes != null) {
+                return SendPhoto.builder()
+                        .chatId(chatId)
+                        .photo(new InputFile(new ByteArrayInputStream(bytes), "report.png"))
+                        .caption("Отчет сгенерирован")
+                        .build();
+            } else {
+                return EditMessageText.builder()
+                        .chatId(chatId)
+                        .messageId(messageId)
+                        .text("Произошла ошибка при формировании отчета.")
+                        .build();
+            }
+
         } else {
             return SendMessage.builder()
                     .chatId(chatId)

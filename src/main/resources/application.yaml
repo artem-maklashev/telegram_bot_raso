@@ -49,7 +49,7 @@ telegram:
       - 596593025
 
   bot:
-#    name: raso_bot #production
-#    token: 7764343387:AAFVAfign7eUwlZMfMSGmPgRPgR7n6UX7_c
-    name: archiktlt_test_bot #Testdevelopment
-    token: 5956010942:AAHQ8Vx9zkE6Z8uyys3Ftn_fWd-GLouxbUY
+    name: raso_bot #production
+    token: 7764343387:AAFVAfign7eUwlZMfMSGmPgRPgR7n6UX7_c
+#    name: archiktlt_test_bot #Testdevelopment
+#    token: 5956010942:AAHQ8Vx9zkE6Z8uyys3Ftn_fWd-GLouxbUY

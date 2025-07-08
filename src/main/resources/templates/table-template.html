@@ -1,35 +1,54 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <meta charset="UTF-8"/>
     <style>
-        /* Стили аналогичные предыдущим примерам */
+        @page {
+            size: landscape;
+        }
+        @font-face {
+            font-family: 'Arial';
+            src: url('fonts/arial.ttf') format('truetype');
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            width: 100%;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+        }
         .styled-table {
             border-collapse: collapse;
             margin: 25px 0;
             font-size: 0.9em;
-            min-width: 400px;
+            width: auto; /* Автоподбор ширины */
+            min-width: 100%; /* Минимальная ширина */
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-            width: 100%;
             border-radius: 8px;
             overflow: hidden;
+            table-layout: auto; /* Ключевое изменение для автоподбора */
         }
         .styled-table thead tr {
             background-color: #4CAF50;
             color: white;
             text-align: left;
             font-weight: bold;
+            white-space: nowrap; /* Запрет переноса заголовков */
         }
         .styled-table th, .styled-table td {
             padding: 12px 15px;
+            white-space: nowrap; /* Запрет переноса текста */
+            text-overflow: ellipsis; /* Многоточие при переполнении */
         }
         .styled-table tbody tr {
             border-bottom: 1px solid #e0e0e0;
         }
-        .styled-table tbody tr.even {
+        .styled-table tbody tr:nth-child(even) {
             background-color: #f8f8f8;
-        }
-        .styled-table tbody tr.odd {
-            background-color: white;
         }
         .styled-table tbody tr:hover {
             background-color: #f1f8e9;
@@ -37,37 +56,63 @@
         .styled-table tbody tr:last-child {
             border-bottom: 2px solid #4CAF50;
         }
-        .table-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-        }
         .title {
             text-align: center;
             color: #333;
             margin: 20px 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+        }
+        .total-row {
+            background-color: #e0f7fa !important;
+            font-weight: bold;
+        }
+        .negative-value {
+            color: red;
+            font-weight: bold;
+        }
+
+
+        /* Адаптивность для мобильных устройств */
+        @media (max-width: 768px) {
+            .styled-table {
+                display: block;
+                overflow-x: auto;
+            }
+            .styled-table th, .styled-table td {
+                white-space: normal; /* Разрешаем перенос на мобильных */
+                min-width: 100px; /* Минимальная ширина ячеек */
+            }
         }
     </style>
 </head>
 <body>
-<h1 th:text="${title}"></h1>
-<table class="styled-table">
-    <thead>
-    <tr>
-        <th th:each="header : ${headers}" th:text="${header}"></th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="item : ${items}">
-        <td th:text="${item.getBoardTitle()}"></td>
-        <td th:text="${item.getPlanValue()}"></td>
-        <td th:text="${item.getFactValue()}"></td>
-        <td th:text="${item.getFactValue()-item.getPlanValue()}"></td>
-        <td th:text="${item.getDefectiveValue()*100}"></td>
-        <!-- и так далее -->
-    </tr>
-    </tbody>
-</table>
+<div class="table-container">
+    <h3 class="title" th:text="${title}"></h3>
+    <table class="styled-table">
+        <thead>
+        <tr>
+            <th th:each="header : ${headers}" th:text="${header}"></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="item : ${items}">
+            <td th:text="${item.getBoardTitle()}"></td>
+            <td th:text="${#numbers.formatDecimal(item.getPlanValue(), 1, 2)}"></td>
+            <td th:text="${#numbers.formatDecimal(item.getFactValue(), 1, 2)}"></td>
+            <td th:classappend="${item.getFactValue() - item.getPlanValue() < 0} ? 'negative-value'"
+                th:text="${#numbers.formatDecimal(item.getFactValue()-item.getPlanValue(), 1, 2)}">
+            </td>
+            <td th:text="${#numbers.formatDecimal(item.getDefectiveValue()*100, 1, 2)}"></td>
+        </tr>
+        <tr class="total-row">
+            <td>Итого</td>
+            <td th:text="${#numbers.formatDecimal(#aggregates.sum(items.![planValue]), 1, 2)}"></td>
+            <td th:text="${#numbers.formatDecimal(#aggregates.sum(items.![factValue]), 1, 2)}"></td>
+            <td th:text="${#numbers.formatDecimal(#aggregates.sum(items.![factValue - planValue]), 1, 2)}"></td>
+            <td th:text="${#numbers.formatDecimal((1 - #aggregates.sum(items.![factValue])/#aggregates.sum(items.![total]))*100, 1, 2)}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
 </body>
 </html>

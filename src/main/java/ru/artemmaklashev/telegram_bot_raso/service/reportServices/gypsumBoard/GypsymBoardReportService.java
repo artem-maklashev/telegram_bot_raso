@@ -13,10 +13,7 @@ import ru.artemmaklashev.telegram_bot_raso.repositories.gypsumboard.PlanReposito
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,6 +22,7 @@ public class GypsymBoardReportService {
     private final BoardsDelaysRepository delaysRepository;
 
     private final PlanRepository planRepository;
+
 
 
     public GypsymBoardReportService(BoardProductionRepository productionRepository, BoardsDelaysRepository delaysRepository, PlanRepository planRepository) {
@@ -43,29 +41,37 @@ public class GypsymBoardReportService {
 
     public List<BoardDelays> getLastDelays() {
         LocalDate date = LocalDate.now().minusDays(1L);
-        List<BoardDelays> result = delaysRepository.findAllByDelayDateBetween(date, date);
-        return result;
+        return delaysRepository.findAllByDelayDateBetween(date, date);
     }
 
     public List<GypsumBoardProductionData> getProductionsByInterval() {
         LocalDateTime startDate = LocalDate.now().withDayOfMonth(1).atStartOfDay();
-        LocalDateTime endDate = startDate.plusMonths(1).minusNanos(1); // Весь текущий месяц
+        LocalDateTime endDate = LocalDate.now().minusDays(1).atStartOfDay();
 
         List<BoardProduction> productions = getFilteredProductions(startDate, endDate);
         List<Plan> plans = planRepository.findAllByPlanDateBetween(startDate.toLocalDate(), endDate.toLocalDate());
 
         Map<Integer, GypsumBoardProductionData> result = processProductions(productions);
+
         processPlans(plans, result);
+
+        System.out.println("==========================================");
+        GypsumBoardProductionData first= result.getOrDefault(10, new GypsumBoardProductionData("Тест", 100, 0, 98, 0));
+        System.out.println("Название" + "-"+first.getBoardTitle());
+        System.out.println("Заформовано" + "-"+first.getTotal());
+        System.out.println("Выполнено" + "-"+first.getFactValue());
+        System.out.println("==========================================");
 
         // Вычисляем defectiveValue для каждого элемента и возвращаем список
         return result.values().stream()
                 .peek(item -> {
                     if (item.getTotal() != 0) {
-                        item.setDefectiveValue(1 - item.getFactValue() / item.getTotal());
+                        item.setDefectiveValue((1 - item.getFactValue() / item.getTotal()));
                     } else {
                         item.setDefectiveValue(0); // или другое значение по умолчанию
                     }
                 })
+                .sorted(Comparator.comparingDouble(GypsumBoardProductionData::getPlanValue).reversed()) // Сортировка по planValue (по возрастанию)
                 .collect(Collectors.toList());
     }
 
@@ -73,7 +79,7 @@ public class GypsymBoardReportService {
     private List<BoardProduction> getFilteredProductions(LocalDateTime startDate, LocalDateTime endDate) {
         return productionRepository.findByProductionListProductionDateBetween(startDate, endDate)
                 .stream()
-                .filter(p -> p.getCategory() != null && p.getCategory().getId() > 1 && p.getCategory().getId() < 5)
+                .filter(p -> p.getCategory() != null && p.getCategory().getId() >= 1 && p.getCategory().getId() < 5)
                 .toList();
     }
 
@@ -92,11 +98,12 @@ public class GypsymBoardReportService {
 
             GypsumBoardProductionData data = result.computeIfAbsent(
                     productId,
-                    k -> new GypsumBoardProductionData(title, 0, total, fact, 0)
+                    k -> new GypsumBoardProductionData(title, 0, 0, 0, 0)
             );
 
             data.addValues(0, total, fact, 0); // Обновляем значения
         }
+
 
         return result;
     }
@@ -111,7 +118,7 @@ public class GypsymBoardReportService {
 
             GypsumBoardProductionData data = result.computeIfAbsent(
                     boardId,
-                    k -> new GypsumBoardProductionData(title, plan.getPlanValue(), 0, 0, 0)
+                    k -> new GypsumBoardProductionData(title, 0, 0, 0, 0)
             );
 
             data.addValues(plan.getPlanValue(), 0, 0, 0);

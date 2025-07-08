@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -20,10 +21,10 @@ public class HtmlProductionTable {
         this.templateEngine = templateEngine;
 
     }
-    public String render( List<GypsumBoardProductionData> data) {
+    public String render(List<GypsumBoardProductionData> data) {
 
         Context context = new Context();
-        context.setVariable("header", "План-факт за период:");
+        context.setVariable("title", "План-факт за период: " + LocalDate.now().withDayOfMonth(1) + " - " + LocalDate.now().minusDays(1));
         context.setVariable("headers", List.of("Наименование", "План", "Факт", "Отклонение", "% брака"));
         context.setVariable("items", data);
         String html = templateEngine.process("table-template", context);

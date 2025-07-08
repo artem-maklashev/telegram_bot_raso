@@ -93,6 +93,24 @@
             <version>3.5.3</version>
         </dependency>
 
+        <!-- Для конвертации HTML в изображение -->
+        <dependency>
+            <groupId>org.xhtmlrenderer</groupId>
+            <artifactId>flying-saucer-pdf</artifactId>
+            <version>9.13.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>3.0.5</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox-tools</artifactId>
+            <version>3.0.5</version>
+        </dependency>
+
+
         <!--        <dependency>-->
 <!--            <groupId>org.hibernate</groupId>-->
 <!--            <artifactId>hibernate-envers</artifactId>-->
