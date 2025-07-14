@@ -24,7 +24,6 @@ public class GypsymBoardReportService {
     private final PlanRepository planRepository;
 
 
-
     public GypsymBoardReportService(BoardProductionRepository productionRepository, BoardsDelaysRepository delaysRepository, PlanRepository planRepository) {
         this.productionRepository = productionRepository;
         this.delaysRepository = delaysRepository;
@@ -45,34 +44,40 @@ public class GypsymBoardReportService {
     }
 
     public List<GypsumBoardProductionData> getProductionsByInterval() {
-        LocalDateTime startDate = LocalDate.now().withDayOfMonth(1).atStartOfDay();
-        LocalDateTime endDate = LocalDate.now().minusDays(1).atStartOfDay();
+        // 1. Определение временного интервала
+        LocalDate now = LocalDate.now();
+        LocalDateTime startDate;
+        LocalDateTime endDate = now.minusDays(1).atStartOfDay(); // Конец периода - вчера
 
+        if (now.getDayOfMonth() != 1) {
+            startDate = now.withDayOfMonth(1).atStartOfDay(); // Начало текущего месяца
+        } else {
+            startDate = now.minusMonths(1).withDayOfMonth(1).atStartOfDay(); // Начало предыдущего месяца
+        }
+
+        // 2. Получение данных
         List<BoardProduction> productions = getFilteredProductions(startDate, endDate);
-        List<Plan> plans = planRepository.findAllByPlanDateBetween(startDate.toLocalDate(), endDate.toLocalDate());
+        List<Plan> plans = planRepository.findAllByPlanDateBetween(
+                startDate.toLocalDate(),
+                endDate.toLocalDate()
+        );
 
+        // 3. Обработка данных
         Map<Integer, GypsumBoardProductionData> result = processProductions(productions);
-
         processPlans(plans, result);
 
-        System.out.println("==========================================");
-        GypsumBoardProductionData first= result.getOrDefault(10, new GypsumBoardProductionData("Тест", 100, 0, 98, 0));
-        System.out.println("Название" + "-"+first.getBoardTitle());
-        System.out.println("Заформовано" + "-"+first.getTotal());
-        System.out.println("Выполнено" + "-"+first.getFactValue());
-        System.out.println("==========================================");
-
-        // Вычисляем defectiveValue для каждого элемента и возвращаем список
+        // 4. Расчет и возврат результата
         return result.values().stream()
-                .peek(item -> {
-                    if (item.getTotal() != 0) {
-                        item.setDefectiveValue((1 - item.getFactValue() / item.getTotal()));
-                    } else {
-                        item.setDefectiveValue(0); // или другое значение по умолчанию
-                    }
-                })
-                .sorted(Comparator.comparingDouble(GypsumBoardProductionData::getPlanValue).reversed()) // Сортировка по planValue (по возрастанию)
+                .peek(this::calculateDefectiveValue)
+                .sorted(Comparator.comparingDouble(GypsumBoardProductionData::getPlanValue).reversed())
                 .collect(Collectors.toList());
+    }
+
+    private void calculateDefectiveValue(GypsumBoardProductionData item) {
+        double defectiveValue = (item.getTotal() != 0)
+                ? (1 - item.getFactValue() / item.getTotal())
+                : 0;
+        item.setDefectiveValue((float) defectiveValue);
     }
 
     // Получение отфильтрованного списка производств

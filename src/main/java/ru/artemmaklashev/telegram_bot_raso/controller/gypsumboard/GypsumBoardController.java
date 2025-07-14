@@ -43,7 +43,7 @@ public class GypsumBoardController {
 
         Map<String, Long> result = delays.stream()
                 .collect(Collectors.toMap(
-                        delay -> { return delay.getUnitPart().getUnit().getName() + "->" + delay.getUnitPart().getName();},
+                        delay -> delay.getUnitPart().getUnit().getName() + "->" + delay.getUnitPart().getName(),
                         BoardDelays:: getDuration,  // Преобразование в Float
                         Long::sum
                 ));
