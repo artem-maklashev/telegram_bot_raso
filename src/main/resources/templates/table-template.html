@@ -5,6 +5,7 @@
     <style>
         @page {
             size: landscape;
+            margin: 1cm;
         }
         @font-face {
             font-family: 'Arial';
@@ -20,29 +21,42 @@
         .table-container {
             width: 100%;
             overflow-x: auto;
+            page-break-inside: avoid; /* Предотвращает разрыв контейнера */
         }
         .styled-table {
             border-collapse: collapse;
             margin: 25px 0;
-            font-size: 0.9em;
-            width: auto; /* Автоподбор ширины */
-            min-width: 100%; /* Минимальная ширина */
+            font-size: 0.8em;
+            line-height: 1.2;
+            width: 100%;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
             overflow: hidden;
-            table-layout: auto; /* Ключевое изменение для автоподбора */
+            table-layout: auto;
+            page-break-inside: auto; /* Разрешает разрыв таблицы */
+        }
+        .styled-table thead {
+            display: table-header-group; /* Гарантирует повторение заголовка на каждой странице */
+        }
+        .styled-table tbody {
+            display: table-row-group;
+        }
+        .styled-table tr {
+            page-break-inside: avoid; /* Пытается не разрывать строки */
+            page-break-after: auto;
         }
         .styled-table thead tr {
             background-color: #4CAF50;
             color: white;
             text-align: left;
             font-weight: bold;
-            white-space: nowrap; /* Запрет переноса заголовков */
+            white-space: nowrap;
         }
         .styled-table th, .styled-table td {
-            padding: 12px 15px;
-            white-space: nowrap; /* Запрет переноса текста */
-            text-overflow: ellipsis; /* Многоточие при переполнении */
+            padding: 6px 8px;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            page-break-inside: avoid; /* Пытается не разрывать ячейки */
         }
         .styled-table tbody tr {
             border-bottom: 1px solid #e0e0e0;
@@ -60,17 +74,38 @@
             text-align: center;
             color: #333;
             margin: 20px 0;
-
+            page-break-after: avoid; /* Не разрывать после заголовка */
         }
         .total-row {
             background-color: #e0f7fa !important;
             font-weight: bold;
+            page-break-before: avoid; /* Пытается не разрывать перед итоговой строкой */
         }
         .negative-value {
             color: red;
             font-weight: bold;
         }
 
+        /* Правила для печати */
+        @media print {
+            body {
+                padding: 0;
+                font-size: 10pt;
+            }
+            .table-container {
+                overflow: visible;
+            }
+            .styled-table {
+                font-size: 0.7em;
+                box-shadow: none;
+            }
+            .styled-table th, .styled-table td {
+                padding: 4px 6px;
+            }
+            .title {
+                margin: 10px 0;
+            }
+        }
 
         /* Адаптивность для мобильных устройств */
         @media (max-width: 768px) {
@@ -79,8 +114,8 @@
                 overflow-x: auto;
             }
             .styled-table th, .styled-table td {
-                white-space: normal; /* Разрешаем перенос на мобильных */
-                min-width: 100px; /* Минимальная ширина ячеек */
+                white-space: normal;
+                min-width: 100px;
             }
         }
     </style>
