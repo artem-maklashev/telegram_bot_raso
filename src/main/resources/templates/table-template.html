@@ -4,8 +4,8 @@
     <meta charset="UTF-8"/>
     <style>
         @page {
-            size: landscape;
-            margin: 1cm;
+            size: auto;
+            margin: 0.5cm;
         }
         @font-face {
             font-family: 'Arial';
@@ -15,136 +15,151 @@
             font-family: 'Arial', sans-serif;
             width: 100%;
             margin: 0;
-            padding: 20px;
+            padding: 10px;
             box-sizing: border-box;
         }
-        .table-container {
-            width: 100%;
-            overflow-x: auto;
-            page-break-inside: avoid; /* Предотвращает разрыв контейнера */
-        }
-        .styled-table {
-            border-collapse: collapse;
-            margin: 25px 0;
-            font-size: 0.8em;
-            line-height: 1.2;
-            width: 100%;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        .table-responsive {
             border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             overflow: hidden;
-            table-layout: auto;
-            page-break-inside: auto; /* Разрешает разрыв таблицы */
+            page-break-inside: avoid;
         }
-        .styled-table thead {
-            display: table-header-group; /* Гарантирует повторение заголовка на каждой странице */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0;
+            font-size: 0.9em;
+            table-layout: fixed;
         }
-        .styled-table tbody {
-            display: table-row-group;
+        .table thead {
+            background-color: #f8f9fa;
         }
-        .styled-table tr {
-            page-break-inside: avoid; /* Пытается не разрывать строки */
-            page-break-after: auto;
-        }
-        .styled-table thead tr {
-            background-color: #4CAF50;
-            color: white;
-            text-align: left;
-            font-weight: bold;
-            white-space: nowrap;
-        }
-        .styled-table th, .styled-table td {
-            padding: 6px 8px;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-            page-break-inside: avoid; /* Пытается не разрывать ячейки */
-        }
-        .styled-table tbody tr {
+        .table th {
+            padding: 8px 12px;
+            text-align: center;
+            font-weight: 600;
+            color: #6c757d;
+            font-size: 0.8em;
             border-bottom: 1px solid #e0e0e0;
         }
-        .styled-table tbody tr:nth-child(even) {
-            background-color: #f8f8f8;
-        }
-        .styled-table tbody tr:hover {
-            background-color: #f1f8e9;
-        }
-        .styled-table tbody tr:last-child {
-            border-bottom: 2px solid #4CAF50;
-        }
-        .title {
+        .table td {
+            padding: 8px 12px;
+            vertical-align: middle;
+            border-bottom: 1px solid #e0e0e0;
             text-align: center;
-            color: #333;
-            margin: 20px 0;
-            page-break-after: avoid; /* Не разрывать после заголовка */
+            word-wrap: break-word;
         }
-        .total-row {
-            background-color: #e0f7fa !important;
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        .text-start {
+            text-align: left !important;
+        }
+        .text-end {
+            text-align: right !important;
+        }
+        .text-center {
+            text-align: center !important;
+        }
+        .fw-semibold {
+            font-weight: 600;
+        }
+        .fw-medium {
+            font-weight: 500;
+        }
+        .fw-bold {
+            font-weight: 700;
+        }
+        .text-muted {
+            color: #6c757d !important;
+        }
+        .text-success {
+            color: #28a745 !important;
+        }
+        .text-danger {
+            color: #dc3545 !important;
+        }
+        .text-warning {
+            color: #ffc107 !important;
+        }
+        .bg-light {
+            background-color: #f8f9fa !important;
+        }
+        .bg-gray-100 {
+            background-color: #f8f9fa !important;
+        }
+        .border-top {
+            border-top: 1px solid #e0e0e0;
+        }
+        .ps-4 {
+            padding-left: 1.5rem !important;
+        }
+        .pe-4 {
+            padding-right: 1.5rem !important;
+        }
+        .py-3 {
+            padding-top: 0.75rem !important;
+            padding-bottom: 0.75rem !important;
+        }
+        .small {
+            font-size: 0.8em;
+        }
+        .product-name {
+            text-align: left !important;
             font-weight: bold;
-            page-break-before: avoid; /* Пытается не разрывать перед итоговой строкой */
         }
         .negative-value {
-            color: red;
-            font-weight: bold;
+            color: #dc3545;
+        }
+        .positive-value {
+            color: #28a745;
         }
 
-        /* Правила для печати */
         @media print {
             body {
                 padding: 0;
                 font-size: 10pt;
             }
-            .table-container {
-                overflow: visible;
-            }
-            .styled-table {
-                font-size: 0.7em;
+            .table-responsive {
                 box-shadow: none;
+                border: none;
             }
-            .styled-table th, .styled-table td {
-                padding: 4px 6px;
-            }
-            .title {
-                margin: 10px 0;
-            }
-        }
-
-        /* Адаптивность для мобильных устройств */
-        @media (max-width: 768px) {
-            .styled-table {
-                display: block;
-                overflow-x: auto;
-            }
-            .styled-table th, .styled-table td {
-                white-space: normal;
-                min-width: 100px;
+            .table th, .table td {
+                padding: 6px 8px;
             }
         }
     </style>
 </head>
 <body>
-<div class="table-container">
-    <h3 class="title" th:text="${title}"></h3>
-    <table class="styled-table">
+<div class="table-responsive">
+    <h3 class="text-center fw-bold mb-3">Гипсокартон</h3>
+    <table class="table">
         <thead>
         <tr>
-            <th th:each="header : ${headers}" th:text="${header}"></th>
+            <th style="width: 40%;" class="text-start">Наименование</th>
+            <th style="width: 15%;">План</th>
+            <th style="width: 15%;">Факт</th>
+            <th style="width: 15%;">Процент брака</th>
+            <th style="width: 15%;">Отклонение</th>
         </tr>
         </thead>
         <tbody>
-        <tr th:each="item : ${items}">
-            <td th:text="${item.getBoardTitle()}"></td>
+        <tr th:each="item : ${items}" class="border-top">
+            <td class="product-name" th:text="${item.getBoardTitle()}"></td>
             <td th:text="${#numbers.formatDecimal(item.getPlanValue(), 1, 2)}"></td>
             <td th:text="${#numbers.formatDecimal(item.getFactValue(), 1, 2)}"></td>
-            <td th:classappend="${item.getFactValue() - item.getPlanValue() < 0} ? 'negative-value'"
-                th:text="${#numbers.formatDecimal(item.getFactValue()-item.getPlanValue(), 1, 2)}">
-            </td>
-            <td th:text="${#numbers.formatDecimal(item.getDefectiveValue()*100, 1, 2)}"></td>
+            <td th:text="${#numbers.formatDecimal(item.getDefectiveValue()*100, 1, 2) + '%'}"></td>
+            <td th:class="${item.getFactValue() - item.getPlanValue() >= 0} ? 'positive-value' : 'negative-value'"
+                th:text="${#numbers.formatDecimal(item.getFactValue() - item.getPlanValue(), 1, 2)}"></td>
         </tr>
-        <tr class="total-row">
-            <td>Итого</td>
+        <tr class="border-top bg-light fw-bold">
+            <td class="product-name">Итого</td>
             <td th:text="${#numbers.formatDecimal(#aggregates.sum(items.![planValue]), 1, 2)}"></td>
             <td th:text="${#numbers.formatDecimal(#aggregates.sum(items.![factValue]), 1, 2)}"></td>
-            <td th:text="${#numbers.formatDecimal(#aggregates.sum(items.![factValue - planValue]), 1, 2)}"></td>
-            <td th:text="${#numbers.formatDecimal((1 - #aggregates.sum(items.![factValue])/#aggregates.sum(items.![total]))*100, 1, 2)}"></td>
+            <td th:text="${#numbers.formatDecimal((1 - #aggregates.sum(items.![factValue])/#aggregates.sum(items.![total]))*100, 1, 2) + '%'}"></td>
+            <td th:class="${#aggregates.sum(items.![factValue]) - #aggregates.sum(items.![planValue]) >= 0} ? 'positive-value' : 'negative-value'"
+                th:text="${#numbers.formatDecimal(#aggregates.sum(items.![factValue]) - #aggregates.sum(items.![planValue]), 1, 2)}"></td>
         </tr>
         </tbody>
     </table>
