@@ -3,7 +3,10 @@ package ru.artemmaklashev.telegram_bot_raso.service.telegram;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -16,7 +19,15 @@ import ru.artemmaklashev.telegram_bot_raso.config.TelegramConfig;
 import ru.artemmaklashev.telegram_bot_raso.model.TelegramUser;
 import ru.artemmaklashev.telegram_bot_raso.repositories.telegram.TelegramUserRepository;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -107,6 +118,58 @@ public class TelegramUserService {
                 .parseMode("MarkdownV2")
                 .build();
         messageService.sendMessage(sendMessage);
+    }
+
+    public Object draw(String report, BufferedImage image, String chatId, int messageId) {
+        try {
+            ByteArrayOutputStream os = new ByteArrayOutputStream();
+            ImageIO.write(image, "png", os);
+            InputStream is = new ByteArrayInputStream(os.toByteArray());
+
+            // Создаем InputFile для отправки изображения
+            InputFile photo = new InputFile(is, "report.png");
+            String header = "Выпуск продукции за " + LocalDate.now().minusDays(1L)
+                    .format(DateTimeFormatter.ofPattern("dd.MM.yyyy", new Locale("ru")));
+            String escapedText = header.replace("*", "\\*")
+                    .replace("_", "\\_")
+                    .replace("[", "\\[")
+                    .replace("]", "\\]")
+                    .replace("(", "\\(")
+                    .replace(")", "\\)")
+                    .replace("~", "\\~")
+                    .replace("`", "\\`")
+                    .replace(">", "\\>")
+                    .replace("#", "\\#")
+                    .replace("+", "\\+")
+                    .replace("-", "\\-")
+                    .replace("=", "\\=")
+                    .replace("|", "\\|")
+                    .replace("{", "\\{")
+                    .replace("}", "\\}")
+                    .replace(".", "\\.")
+                    .replace("!", "\\!");
+            sendMessage(chatId, "*" + escapedText + "*");
+            // Создаем сообщение с изображением и подписью
+            SendPhoto sendPhoto = SendPhoto.builder()
+                    .chatId(chatId)
+                    .photo(photo)
+                    .caption(report) // Подпись под изображением
+                    .build();
+
+            // Закрываем ресурсы
+            os.close();
+            is.close();
+
+            return sendPhoto;
+        } catch (Exception e) {
+            e.printStackTrace();
+            // В случае ошибки возвращаем текстовое сообщение об ошибке
+            return EditMessageText.builder()
+                    .chatId(chatId)
+                    .messageId(messageId)
+                    .text("Произошла ошибка при формировании отчета.")
+                    .build();
+        }
     }
 }
 

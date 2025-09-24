@@ -10,6 +10,7 @@ import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
+import ru.artemmaklashev.telegram_bot_raso.components.commands.Command;
 import ru.artemmaklashev.telegram_bot_raso.controller.drymix.DryMixController;
 import ru.artemmaklashev.telegram_bot_raso.controller.gypsumboard.GypsumBoardController;
 import ru.artemmaklashev.telegram_bot_raso.entity.outdata.GypsumBoardProductionData;
@@ -31,156 +32,154 @@ import java.util.Locale;
 
 @Component
 public class CallbackHandler {
-    private final GypsumBoardController gypsumBoardController;
-    private final DryMixController dryMixController;
-    private final TelegramUserService userService;
-    private final GypsymBoardReportService gypsymBoardReportService;
-    private final SpringTemplateEngine templateEngine;
 
-    private final HtmlToImageConverter htmlToImageConverter = new HtmlToImageConverter();
+    private final CallbackCommandRegistry registry;
 
 
-    public CallbackHandler(GypsumBoardController gypsumBoardController, DryMixController dryMixController, TelegramUserService userService, GypsymBoardReportService gypsymBoardReportService, @Qualifier("templateEngine") SpringTemplateEngine templateEngine) {
-        this.gypsumBoardController = gypsumBoardController;
-        this.dryMixController = dryMixController;
-        this.userService = userService;
-        this.gypsymBoardReportService = gypsymBoardReportService;
-        this.templateEngine = templateEngine;
+    public CallbackHandler(CallbackCommandRegistry registry) {
+
+        this.registry = registry;
     }
 
     public Object handleCallback(Update update) {
         String callbackData = update.getCallbackQuery().getData();
-        String chatId = update.getCallbackQuery().getMessage().getChatId().toString();
-        int messageId = update.getCallbackQuery().getMessage().getMessageId();
-
-        if ("gypsumBoardReport".equalsIgnoreCase(callbackData)) {
-            return handleGypsumBoardReport(chatId, messageId);
-        } else if (callbackData.startsWith("approve")) {
-            return handleApprove(update, chatId);
-        } else if ("dryMixReport".equalsIgnoreCase(callbackData)) {
-            return handleDryMixReport(chatId, messageId);
-        } else if ("gypsumBoardTable".equalsIgnoreCase(callbackData)) {
-            return handleGypsumBoardTable(chatId, messageId);
+//        String chatId = update.getCallbackQuery().getMessage().getChatId().toString();
+//        int messageId = update.getCallbackQuery().getMessage().getMessageId();
+        Command command = registry.getCommand(callbackData);
+        if (command != null) {
+            return command.execute(update);
         } else {
+            String chatId = update.getCallbackQuery().getMessage().getChatId().toString();
+            int messageId = update.getCallbackQuery().getMessage().getMessageId();
             return EditMessageText.builder()
                     .chatId(chatId)
                     .messageId(messageId)
                     .text("Неизвестное действие.")
                     .build();
         }
+
+//        } else if (callbackData.startsWith("approve")) {
+//            return handleApprove(update, chatId);
+//        } else if ("dryMixReport".equalsIgnoreCase(callbackData)) {
+//            return handleDryMixReport(chatId, messageId);
+//        } else if ("gypsumBoardTable".equalsIgnoreCase(callbackData)) {
+//            return handleGypsumBoardTable(chatId, messageId);
+//        } else {
+//
+//        }
     }
 
-    private Object handleGypsumBoardTable(String chatId, int messageId)  {
-        List<GypsumBoardProductionData> productiondata = gypsymBoardReportService.getProductionsByInterval();
-        if (!productiondata.isEmpty()) {
-            HtmlProductionTable htmlProductionTable = new HtmlProductionTable(templateEngine);
-            String html = htmlProductionTable.render(productiondata);
-            byte[] bytes ;
-            try {
-                bytes = htmlToImageConverter.convertHtmlToImage(html);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+//    private Object handleGypsumBoardTable(String chatId, int messageId)  {
+//        List<GypsumBoardProductionData> productionData = gypsymBoardReportService.getProductionsByInterval();
+//        if (!productionData.isEmpty()) {
+//            HtmlProductionTable htmlProductionTable = new HtmlProductionTable(templateEngine);
+//            String html = htmlProductionTable.render(productionData);
+//            byte[] bytes ;
+//            try {
+//                bytes = htmlToImageConverter.convertHtmlToImage(html);
+//            } catch (IOException e) {
+//                throw new RuntimeException(e);
+//            }
+////            return SendMessage.builder()
+////                    .chatId(chatId)
+////                    .text("отчет сгенерирован")
+////                    .build();
+//            if (bytes != null) {
+//                return SendPhoto.builder()
+//                        .chatId(chatId)
+//                        .photo(new InputFile(new ByteArrayInputStream(bytes), "report.png"))
+//                        .caption("Отчет сгенерирован")
+//                        .build();
+//            } else {
+//                return EditMessageText.builder()
+//                        .chatId(chatId)
+//                        .messageId(messageId)
+//                        .text("Произошла ошибка при формировании отчета.")
+//                        .build();
+//            }
+//
+//        } else {
 //            return SendMessage.builder()
 //                    .chatId(chatId)
-//                    .text("отчет сгенерирован")
+//                    .text("Нет данных")
 //                    .build();
-            if (bytes != null) {
-                return SendPhoto.builder()
-                        .chatId(chatId)
-                        .photo(new InputFile(new ByteArrayInputStream(bytes), "report.png"))
-                        .caption("Отчет сгенерирован")
-                        .build();
-            } else {
-                return EditMessageText.builder()
-                        .chatId(chatId)
-                        .messageId(messageId)
-                        .text("Произошла ошибка при формировании отчета.")
-                        .build();
-            }
+//        }
+//    }
 
-        } else {
-            return SendMessage.builder()
-                    .chatId(chatId)
-                    .text("Нет данных")
-                    .build();
-        }
-    }
+//    private Object handleDryMixReport(String chatId, int messageId) {
+//
+//        String report = dryMixController.getDelaysData();
+//        BufferedImage image = dryMixController.getImageReport();
+//        return draw(report, image, chatId, messageId);
+//    }
 
-    private Object handleDryMixReport(String chatId, int messageId) {
+//    public Object handleGypsumBoardReport(String chatId, int messageId) {
+//        // Получаем отчет и изображение
+//        String report = gypsumBoardController.getReportData();
+//        BufferedImage image = gypsumBoardController.getImageReport();
+//        return draw(report, image, chatId, messageId);
+//    }
 
-        String report = dryMixController.getDelaysData();
-        BufferedImage image = dryMixController.getImageReport();
-        return draw(report, image, chatId, messageId);
-    }
+//    private EditMessageText handleApprove(Update update, String chatId) {
+//        var user = update.getCallbackQuery().getFrom();
+//        userService.approveUser(user, chatId);
+//        return EditMessageText.builder()
+//                .chatId(chatId)
+//                .messageId(update.getCallbackQuery().getMessage().getMessageId())
+//                .text("Запрос отправлен")
+//                .build();
+//    }
 
-    public Object handleGypsumBoardReport(String chatId, int messageId) {
-        // Получаем отчет и изображение
-        String report = gypsumBoardController.getReportData();
-        BufferedImage image = gypsumBoardController.getImageReport();
-        return draw(report, image, chatId, messageId);
-    }
-
-    private EditMessageText handleApprove(Update update, String chatId) {
-        var user = update.getCallbackQuery().getFrom();
-        userService.approveUser(user, chatId);
-        return EditMessageText.builder()
-                .chatId(chatId)
-                .messageId(update.getCallbackQuery().getMessage().getMessageId())
-                .text("Запрос отправлен")
-                .build();
-    }
-
-    private Object draw(String report, BufferedImage image, String chatId, int messageId) {
-        try {
-            ByteArrayOutputStream os = new ByteArrayOutputStream();
-            ImageIO.write(image, "png", os);
-            InputStream is = new ByteArrayInputStream(os.toByteArray());
-
-            // Создаем InputFile для отправки изображения
-            InputFile photo = new InputFile(is, "report.png");
-            String header = "Выпуск продукции за " + LocalDate.now().minusDays(1L)
-                    .format(DateTimeFormatter.ofPattern("dd.MM.yyyy", new Locale("ru")));
-            String escapedText = header.replace("*", "\\*")
-                    .replace("_", "\\_")
-                    .replace("[", "\\[")
-                    .replace("]", "\\]")
-                    .replace("(", "\\(")
-                    .replace(")", "\\)")
-                    .replace("~", "\\~")
-                    .replace("`", "\\`")
-                    .replace(">", "\\>")
-                    .replace("#", "\\#")
-                    .replace("+", "\\+")
-                    .replace("-", "\\-")
-                    .replace("=", "\\=")
-                    .replace("|", "\\|")
-                    .replace("{", "\\{")
-                    .replace("}", "\\}")
-                    .replace(".", "\\.")
-                    .replace("!", "\\!");
-            userService.sendMessage(chatId, "*" + escapedText + "*");
-            // Создаем сообщение с изображением и подписью
-            SendPhoto sendPhoto = SendPhoto.builder()
-                    .chatId(chatId)
-                    .photo(photo)
-                    .caption(report) // Подпись под изображением
-                    .build();
-
-            // Закрываем ресурсы
-            os.close();
-            is.close();
-
-            return sendPhoto;
-        } catch (Exception e) {
-            e.printStackTrace();
-            // В случае ошибки возвращаем текстовое сообщение об ошибке
-            return EditMessageText.builder()
-                    .chatId(chatId)
-                    .messageId(messageId)
-                    .text("Произошла ошибка при формировании отчета.")
-                    .build();
-        }
-    }
+//    private Object draw(String report, BufferedImage image, String chatId, int messageId) {
+//        try {
+//            ByteArrayOutputStream os = new ByteArrayOutputStream();
+//            ImageIO.write(image, "png", os);
+//            InputStream is = new ByteArrayInputStream(os.toByteArray());
+//
+//            // Создаем InputFile для отправки изображения
+//            InputFile photo = new InputFile(is, "report.png");
+//            String header = "Выпуск продукции за " + LocalDate.now().minusDays(1L)
+//                    .format(DateTimeFormatter.ofPattern("dd.MM.yyyy", new Locale("ru")));
+//            String escapedText = header.replace("*", "\\*")
+//                    .replace("_", "\\_")
+//                    .replace("[", "\\[")
+//                    .replace("]", "\\]")
+//                    .replace("(", "\\(")
+//                    .replace(")", "\\)")
+//                    .replace("~", "\\~")
+//                    .replace("`", "\\`")
+//                    .replace(">", "\\>")
+//                    .replace("#", "\\#")
+//                    .replace("+", "\\+")
+//                    .replace("-", "\\-")
+//                    .replace("=", "\\=")
+//                    .replace("|", "\\|")
+//                    .replace("{", "\\{")
+//                    .replace("}", "\\}")
+//                    .replace(".", "\\.")
+//                    .replace("!", "\\!");
+//            userService.sendMessage(chatId, "*" + escapedText + "*");
+//            // Создаем сообщение с изображением и подписью
+//            SendPhoto sendPhoto = SendPhoto.builder()
+//                    .chatId(chatId)
+//                    .photo(photo)
+//                    .caption(report) // Подпись под изображением
+//                    .build();
+//
+//            // Закрываем ресурсы
+//            os.close();
+//            is.close();
+//
+//            return sendPhoto;
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            // В случае ошибки возвращаем текстовое сообщение об ошибке
+//            return EditMessageText.builder()
+//                    .chatId(chatId)
+//                    .messageId(messageId)
+//                    .text("Произошла ошибка при формировании отчета.")
+//                    .build();
+//        }
+//    }
 }
 

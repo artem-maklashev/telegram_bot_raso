@@ -1,5 +1,6 @@
 package ru.artemmaklashev.telegram_bot_raso.service.html;
 
+import org.jetbrains.annotations.NotNull;
 import org.xhtmlrenderer.extend.ReplacedElement;
 import org.xhtmlrenderer.extend.ReplacedElementFactory;
 import org.xhtmlrenderer.extend.UserAgentCallback;
@@ -35,7 +36,7 @@ public class CustomReplacedElementFactory implements ReplacedElementFactory {
     }
 
     @Override
-    public void setFormSubmissionListener(FormSubmissionListener formSubmissionListener) {
+    public void setFormSubmissionListener(@NotNull FormSubmissionListener formSubmissionListener) {
 
     }
 }
