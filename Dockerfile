@@ -1,4 +1,4 @@
-FROM openjdk:20
+FROM bellsoft/liberica-openjre-alpine:21-cds
 
 ENV SPRING_DATASOURCE_URL="jdbc:mysql://130.193.39.169:33006/goldengroup"
 ENV SPRING_DATASOURCE_USERNAME=root
