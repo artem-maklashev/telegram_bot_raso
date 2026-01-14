@@ -4,7 +4,9 @@ import org.springframework.stereotype.Service;
 import ru.artemmaklashev.telegram_bot_raso.entity.delays.BoardDelays;
 import ru.artemmaklashev.telegram_bot_raso.entity.gypsumboard.GypsumBoard;
 import ru.artemmaklashev.telegram_bot_raso.entity.gypsumboard.Plan;
+import ru.artemmaklashev.telegram_bot_raso.entity.outdata.DateInterval;
 import ru.artemmaklashev.telegram_bot_raso.entity.outdata.GypsumBoardProductionData;
+import ru.artemmaklashev.telegram_bot_raso.entity.outdata.IntervalData;
 import ru.artemmaklashev.telegram_bot_raso.entity.production.BoardProduction;
 import ru.artemmaklashev.telegram_bot_raso.repositories.delays.BoardsDelaysRepository;
 import ru.artemmaklashev.telegram_bot_raso.repositories.gypsumboard.BoardProductionRepository;
@@ -45,26 +47,20 @@ public class GypsymBoardReportService {
 
     public List<GypsumBoardProductionData> getProductionsByInterval() {
         // 1. Определение временного интервала
-        LocalDate now = LocalDate.now();
-        LocalDateTime startDate;
-        LocalDateTime endDate = now.minusDays(1).atStartOfDay(); // Конец периода - вчера
-
-        if (now.getDayOfMonth() != 1) {
-            startDate = now.withDayOfMonth(1).atStartOfDay(); // Начало текущего месяца
-        } else {
-            startDate = now.minusMonths(1).withDayOfMonth(1).atStartOfDay(); // Начало предыдущего месяца
-        }
-
-        // 2. Получение данных
-        List<BoardProduction> productions = getFilteredProductions(startDate, endDate);
-        List<Plan> plans = planRepository.findAllByPlanDateBetween(
-                startDate.toLocalDate(),
-                endDate.toLocalDate()
-        );
+//        LocalDate now = LocalDate.now();
+//        LocalDateTime startDate;
+//        LocalDateTime endDate = now.minusDays(1).atStartOfDay(); // Конец периода - вчера
+//
+//        if (now.getDayOfMonth() != 1) {
+//            startDate = now.withDayOfMonth(1).atStartOfDay(); // Начало текущего месяца
+//        } else {
+//            startDate = now.minusMonths(1).withDayOfMonth(1).atStartOfDay(); // Начало предыдущего месяца
+//        }
+        var data = getIntervalData(LocalDate.now());
 
         // 3. Обработка данных
-        Map<Integer, GypsumBoardProductionData> result = processProductions(productions);
-        processPlans(plans, result);
+        Map<Integer, GypsumBoardProductionData> result = processProductions(data.getProductions());
+        processPlans(data.getPlans(), result);
 
         // 4. Расчет и возврат результата
         return result.values().stream()
@@ -134,5 +130,35 @@ public class GypsymBoardReportService {
         return gb.getTradeMark().getName() + " " + gb.getBoardType().getName() +
                 "-" + gb.getEdge().getName() + " " + gb.getThickness().getValue() +
                 "-" + gb.getWidth().getValue() + "-" + gb.getLength().getValue();
+    }
+
+
+    private static DateInterval determineReportingInterval(LocalDate today) {
+        LocalDate endDate = today.minusDays(1); // Вчера
+
+        LocalDate startDate;
+        if (today.getDayOfMonth() != 1) {
+            startDate = today.withDayOfMonth(1); // Начало текущего месяца
+        } else {
+            startDate = today.minusMonths(1).withDayOfMonth(1); // Начало предыдущего месяца
+        }
+
+        return new DateInterval(startDate, endDate);
+    }
+
+    public IntervalData getIntervalData(LocalDate today) {
+        DateInterval interval = determineReportingInterval(today);
+
+        List<BoardProduction> productions = getFilteredProductions(
+                interval.getStart().atStartOfDay(),
+                interval.getEnd().atStartOfDay()
+        );
+
+        List<Plan> plans = planRepository.findAllByPlanDateBetween(
+                interval.getStart(),
+                interval.getEnd()
+        );
+
+        return new IntervalData(productions, plans);
     }
 }

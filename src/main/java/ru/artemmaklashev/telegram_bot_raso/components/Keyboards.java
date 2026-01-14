@@ -11,10 +11,12 @@ public class Keyboards {
     public InlineKeyboardMarkup getReportKeyboard() {
         Button gypsumBoard = new Button("Отчет по ГСП", "gypsumBoardReport");
         Button gypsumBoardProduction = new Button("План-факт ГСП", "gypsumBoardTable");
-        Button dryMix = new Button("Отчет по сухим смесям", "dryMixReport");
+        Button gypsumBoardPlanTable = new Button("План-факт ГСП по дням", "gypsumBoardPlanTable");
+//        Button dryMix = new Button("Отчет по сухим смесям", "dryMixReport");
         Buttons buttons = new Buttons();
         buttons.addButton(gypsumBoard, 1);
         buttons.addButton(gypsumBoardProduction, 2);
+        buttons.addButton(gypsumBoardPlanTable, 3);
 //        buttons.addButton(dryMix, 2);
         InlineKeyboardMarkup markup = buttons.build();
         System.out.println("Клавиатура создана успешно " + markup);
