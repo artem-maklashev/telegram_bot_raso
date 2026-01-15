@@ -10,8 +10,6 @@ import java.time.LocalDate;
 @Data
 public class GypsumBoardPlanFactData {
     private LocalDate date;
-//    private float planValue;
-//    private float factValue;
     private GypsumBoard gypsumBoard;
     private PlanFactValues planFactValues;
 

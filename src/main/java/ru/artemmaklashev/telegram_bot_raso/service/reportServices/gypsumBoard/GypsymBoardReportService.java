@@ -1,18 +1,27 @@
 package ru.artemmaklashev.telegram_bot_raso.service.reportServices.gypsumBoard;
 
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import ru.artemmaklashev.telegram_bot_raso.entity.delays.BoardDelays;
 import ru.artemmaklashev.telegram_bot_raso.entity.gypsumboard.GypsumBoard;
 import ru.artemmaklashev.telegram_bot_raso.entity.gypsumboard.Plan;
 import ru.artemmaklashev.telegram_bot_raso.entity.outdata.*;
+import ru.artemmaklashev.telegram_bot_raso.entity.outdata.dto.GypsumBoardRow;
 import ru.artemmaklashev.telegram_bot_raso.entity.production.BoardProduction;
 import ru.artemmaklashev.telegram_bot_raso.repositories.delays.BoardsDelaysRepository;
 import ru.artemmaklashev.telegram_bot_raso.repositories.gypsumboard.BoardProductionRepository;
 import ru.artemmaklashev.telegram_bot_raso.repositories.gypsumboard.PlanRepository;
 
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -235,4 +244,92 @@ public class GypsymBoardReportService {
             return Objects.hash(date, boardId);
         }
     }
+
+    public PlanFactTableData buildTable(List<GypsumBoardPlanFactData> source) {
+
+        // уникальные даты (колонки)
+        List<LocalDate> dates = source.stream()
+                .map(GypsumBoardPlanFactData::getDate)
+                .distinct()
+                .sorted()
+                .toList();
+
+        // строки по виду гипсокартона
+        Map<Integer, GypsumBoardRow> rows = new LinkedHashMap<>();
+
+        for (GypsumBoardPlanFactData item : source) {
+
+            GypsumBoardRow row = rows.computeIfAbsent(
+                    item.getGypsumBoard().getId(),
+                    id -> {
+                        GypsumBoardRow r = new GypsumBoardRow();
+                        r.setGypsumBoard(item.getGypsumBoard());
+                        return r;
+                    }
+            );
+
+            row.getValuesByDate().put(
+                    item.getDate(),
+                    item.getPlanFactValues()
+            );
+        }
+
+        return new PlanFactTableData(dates, new ArrayList<>(rows.values()));
+    }
+
+    public void exportToExcel(PlanFactTableData table, OutputStream out) throws IOException {
+
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("План-Факт");
+
+            int rowIdx = 0;
+
+            // ===== HEADER =====
+            Row header = sheet.createRow(rowIdx++);
+            int colIdx = 0;
+
+            header.createCell(colIdx++).setCellValue("Гипсокартон");
+
+            for (LocalDate date : table.getDates()) {
+                header.createCell(colIdx++)
+                        .setCellValue(date.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+            }
+
+            // ===== DATA =====
+            for (GypsumBoardRow rowData : table.getRows()) {
+                Row row = sheet.createRow(rowIdx++);
+                colIdx = 0;
+
+                row.createCell(colIdx++)
+                        .setCellValue(rowData.getGypsumBoard().toString());
+
+                for (LocalDate date : table.getDates()) {
+                    PlanFactValues v = rowData.getValuesByDate().get(date);
+
+                    if (v != null) {
+                        row.createCell(colIdx++)
+                                .setCellValue(v.getFactValue()); // или "plan / fact"
+                    } else {
+                        row.createCell(colIdx++).setCellValue("");
+                    }
+                }
+            }
+
+            // автоширина
+            for (int i = 0; i <= table.getDates().size(); i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            workbook.write(out);
+        }
+    }
+
+    public byte[] buildExcelFile(PlanFactTableData table) throws IOException {
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+            exportToExcel(table, out);
+            return out.toByteArray();
+        }
+    }
+
+
 }
