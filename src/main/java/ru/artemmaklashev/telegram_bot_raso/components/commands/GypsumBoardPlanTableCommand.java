@@ -2,9 +2,12 @@ package ru.artemmaklashev.telegram_bot_raso.components.commands;
 
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import ru.artemmaklashev.telegram_bot_raso.entity.outdata.GypsumBoardPlanFactData;
+import ru.artemmaklashev.telegram_bot_raso.entity.outdata.IntervalData;
 import ru.artemmaklashev.telegram_bot_raso.service.reportServices.gypsumBoard.GypsymBoardReportService;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Component("gypsumBoardPlanTable")
 public class GypsumBoardPlanTableCommand implements Command{
@@ -18,5 +21,10 @@ public class GypsumBoardPlanTableCommand implements Command{
         var data = service.getIntervalData(LocalDate.now());
 
         return null;
+    }
+    private List<GypsumBoardPlanFactData> composeTableData(IntervalData  intervalData) {
+        var productions = intervalData.getProductions();
+        var plans = intervalData.getPlans();
+
     }
 }

@@ -4,9 +4,7 @@ import org.springframework.stereotype.Service;
 import ru.artemmaklashev.telegram_bot_raso.entity.delays.BoardDelays;
 import ru.artemmaklashev.telegram_bot_raso.entity.gypsumboard.GypsumBoard;
 import ru.artemmaklashev.telegram_bot_raso.entity.gypsumboard.Plan;
-import ru.artemmaklashev.telegram_bot_raso.entity.outdata.DateInterval;
-import ru.artemmaklashev.telegram_bot_raso.entity.outdata.GypsumBoardProductionData;
-import ru.artemmaklashev.telegram_bot_raso.entity.outdata.IntervalData;
+import ru.artemmaklashev.telegram_bot_raso.entity.outdata.*;
 import ru.artemmaklashev.telegram_bot_raso.entity.production.BoardProduction;
 import ru.artemmaklashev.telegram_bot_raso.repositories.delays.BoardsDelaysRepository;
 import ru.artemmaklashev.telegram_bot_raso.repositories.gypsumboard.BoardProductionRepository;
@@ -22,7 +20,6 @@ import java.util.stream.Collectors;
 public class GypsymBoardReportService {
     private final BoardProductionRepository productionRepository;
     private final BoardsDelaysRepository delaysRepository;
-
     private final PlanRepository planRepository;
 
 
@@ -160,5 +157,82 @@ public class GypsymBoardReportService {
         );
 
         return new IntervalData(productions, plans);
+    }
+
+    public List<GypsumBoardPlanFactData> getDataForTable(
+            List<Plan> plans,
+            List<BoardProduction> productions
+    ) {
+        Map<PlanFactKey, GypsumBoardPlanFactData> map = new HashMap<>();
+
+        // планы
+        for (Plan plan : plans) {
+            LocalDate date = plan.getPlanDate();
+            Integer boardId = plan.getGypsumBoard().getId();
+
+            map.computeIfAbsent(
+                            new PlanFactKey(date, boardId),
+                            k -> new GypsumBoardPlanFactData(
+                                    date,
+                                    0,
+                                    0,
+                                    plan.getGypsumBoard()
+                            )
+                    ).getPlanFactValues()
+                    .setPlanValue(plan.getPlanValue());
+        }
+
+        // факты (категории 2 и 3)
+        for (BoardProduction production : productions) {
+            int categoryId = production.getCategory().getId();
+            if (categoryId != 2 && categoryId != 3) {
+                continue;
+            }
+
+            LocalDate date = production.getProductionList()
+                    .getProductionDate()
+                    .toLocalDate();
+            Integer boardId = production.getProduct().getId();
+
+            map.computeIfAbsent(
+                            new PlanFactKey(date, boardId),
+                            k -> new GypsumBoardPlanFactData(
+                                    date,
+                                    0,
+                                    0,
+                                    production.getProduct()
+                            )
+                    ).getPlanFactValues()
+                    .setFactValue(
+                            map.get(new PlanFactKey(date, boardId))
+                                    .getPlanFactValues()
+                                    .getFactValue() + production.getValue()
+                    );
+        }
+
+        return new ArrayList<>(map.values());
+    }
+
+
+    private static class PlanFactKey {
+        private final LocalDate date;
+        private final Integer boardId;
+
+        PlanFactKey(LocalDate date, Integer boardId) {
+            this.date = date;
+            this.boardId = boardId;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof PlanFactKey key)) return false;
+            return date.equals(key.date) && boardId.equals(key.boardId);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(date, boardId);
+        }
     }
 }
