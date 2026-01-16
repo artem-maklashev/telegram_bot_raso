@@ -6,7 +6,7 @@ import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import ru.artemmaklashev.telegram_bot_raso.entity.outdata.GypsumBoardPlanFactData;
 import ru.artemmaklashev.telegram_bot_raso.entity.outdata.IntervalData;
-import ru.artemmaklashev.telegram_bot_raso.service.reportServices.gypsumBoard.GypsymBoardReportService;
+import ru.artemmaklashev.telegram_bot_raso.service.reportServices.gypsumBoard.GypsumBoardReportService;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -15,8 +15,8 @@ import java.util.List;
 
 @Component("gypsumBoardPlanTable")
 public class GypsumBoardPlanTableCommand implements Command{
-    private final GypsymBoardReportService service;
-    public GypsumBoardPlanTableCommand(GypsymBoardReportService service) {
+    private final GypsumBoardReportService service;
+    public GypsumBoardPlanTableCommand(GypsumBoardReportService service) {
         this.service = service;
     }
 
@@ -34,8 +34,11 @@ public class GypsumBoardPlanTableCommand implements Command{
         }
 
         Long chatId = callback.getMessage().getChatId();
+        LocalDate today = LocalDate.now();
+//        LocalDate today = LocalDate.ofYearDay(2026, 1);
 
-        var data = service.getIntervalData(LocalDate.now());
+
+        var data = service.getIntervalData(today);
         var tableData = composeTableData(data);
         var table = service.buildTable(tableData);
 
@@ -51,7 +54,8 @@ public class GypsumBoardPlanTableCommand implements Command{
         return SendDocument.builder()
                 .chatId(chatId)
                 .document(inputFile)
-                .caption("Таблица план-факт на утро " + LocalDate.now())
+                .caption("Таблица план-факт за период " + GypsumBoardReportService.determineReportingInterval(today).getStart() +
+                        " - " + GypsumBoardReportService.determineReportingInterval(today).getEnd())
                 .build();
     }
 

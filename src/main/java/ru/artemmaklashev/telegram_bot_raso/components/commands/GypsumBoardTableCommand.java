@@ -11,18 +11,18 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 import ru.artemmaklashev.telegram_bot_raso.entity.outdata.GypsumBoardProductionData;
 import ru.artemmaklashev.telegram_bot_raso.service.html.HtmlProductionTable;
 import ru.artemmaklashev.telegram_bot_raso.service.html.HtmlToImageConverter;
-import ru.artemmaklashev.telegram_bot_raso.service.reportServices.gypsumBoard.GypsymBoardReportService;
+import ru.artemmaklashev.telegram_bot_raso.service.reportServices.gypsumBoard.GypsumBoardReportService;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
 @Component("gypsumBoardTable")
 public class GypsumBoardTableCommand implements Command{
-    private final GypsymBoardReportService service;
+    private final GypsumBoardReportService service;
     private final SpringTemplateEngine templateEngine;
     private final HtmlToImageConverter htmlToImageConverter = new HtmlToImageConverter();
 
-    public GypsumBoardTableCommand(GypsymBoardReportService service,  @Qualifier("templateEngine") SpringTemplateEngine templateEngine) {
+    public GypsumBoardTableCommand(GypsumBoardReportService service,  @Qualifier("templateEngine") SpringTemplateEngine templateEngine) {
         this.service = service;
         this.templateEngine = templateEngine;
     }

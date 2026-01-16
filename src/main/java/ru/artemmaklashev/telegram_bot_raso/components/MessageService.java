@@ -1,6 +1,7 @@
 package ru.artemmaklashev.telegram_bot_raso.components;
 
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
@@ -103,6 +104,10 @@ public class MessageService {
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
+    }
+
+    public void answerCallbackQuery(AnswerCallbackQuery build) {
+        executeMessage(build);
     }
 }
 

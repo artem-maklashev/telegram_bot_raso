@@ -7,7 +7,7 @@ import ru.artemmaklashev.telegram_bot_raso.entity.gypsumboard.GypsumBoard;
 import ru.artemmaklashev.telegram_bot_raso.entity.production.BoardProduction;
 import ru.artemmaklashev.telegram_bot_raso.service.report.ASCIItable;
 import ru.artemmaklashev.telegram_bot_raso.service.report.ASCIItableImage;
-import ru.artemmaklashev.telegram_bot_raso.service.reportServices.gypsumBoard.GypsymBoardReportService;
+import ru.artemmaklashev.telegram_bot_raso.service.reportServices.gypsumBoard.GypsumBoardReportService;
 
 import java.awt.image.BufferedImage;
 import java.time.LocalDate;
@@ -20,18 +20,18 @@ import java.util.stream.LongStream;
 @Component
 public class GypsumBoardController {
 
-    private final GypsymBoardReportService gypsymBoardReportService;
+    private final GypsumBoardReportService gypsumBoardReportService;
 
-    public GypsumBoardController(GypsymBoardReportService gypsymBoardReportService) {
-        this.gypsymBoardReportService = gypsymBoardReportService;
+    public GypsumBoardController(GypsumBoardReportService gypsumBoardReportService) {
+        this.gypsumBoardReportService = gypsumBoardReportService;
     }
 
     public String getReportData() {
 
-        List<BoardProduction> productions = gypsymBoardReportService.getLastProductions().stream()
+        List<BoardProduction> productions = gypsumBoardReportService.getLastProductions().stream()
                 .filter(boardProduction -> boardProduction.getCategory().getId()  > 1 && boardProduction.getCategory().getId() <=4)
                 .toList();
-        List<BoardDelays> delays = gypsymBoardReportService.getLastDelays();
+        List<BoardDelays> delays = gypsumBoardReportService.getLastDelays();
 
         return formatBoardDelays(delays);
     }
@@ -120,9 +120,9 @@ public class GypsumBoardController {
     }
 
     private List<BoardProduction> getLastProductions() {
-        if (gypsymBoardReportService.getLastProductions().isEmpty()) {
+        if (gypsumBoardReportService.getLastProductions().isEmpty()) {
             return null;
-        } else return gypsymBoardReportService.getLastProductions();
+        } else return gypsumBoardReportService.getLastProductions();
     }
 
 }

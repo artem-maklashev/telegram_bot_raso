@@ -1,6 +1,7 @@
 package ru.artemmaklashev.telegram_bot_raso.controller;
 
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.botapimethods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -77,7 +78,9 @@ public class TelegramController {
             throws IOException, TelegramApiException {
 
         List<Object> responses = callbackHandler.handleCallback(update);
-
+        messageService.answerCallbackQuery(AnswerCallbackQuery.builder()
+                .callbackQueryId(update.getCallbackQuery().getId())
+                .build());
         for (Object response : responses) {
 
             if (response instanceof SendDocument doc) {
