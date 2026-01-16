@@ -11,9 +11,12 @@ import org.telegram.telegrambots.longpolling.util.LongPollingSingleThreadUpdateC
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.artemmaklashev.telegram_bot_raso.config.TelegramConfig;
 import ru.artemmaklashev.telegram_bot_raso.controller.TelegramController;
 import ru.artemmaklashev.telegram_bot_raso.service.telegram.TelegramUserService;
+
+import java.io.IOException;
 
 
 @Component
@@ -45,7 +48,11 @@ public class Bot implements SpringLongPollingBot, LongPollingSingleThreadUpdateC
     public void consume(Update update) {
         if (update.hasMessage()) {
             // Обработка обычных сообщений
-            telegramController.handleUpdate(update);
+            try {
+                telegramController.handleUpdate(update);
+            } catch (IOException | TelegramApiException e) {
+                throw new RuntimeException(e);
+            }
         } else if (update.hasCallbackQuery()) {
             // Обработка callback-запросов
             CallbackQuery callbackQuery = update.getCallbackQuery();
@@ -55,7 +62,11 @@ public class Bot implements SpringLongPollingBot, LongPollingSingleThreadUpdateC
                 telegramUserService.handleCallbackQuery(callbackQuery); // Передаем управление вашему обработчику
             } else {
                 // Обработка других callback-запросов
-                telegramController.handleUpdate(update);
+                try {
+                    telegramController.handleUpdate(update);
+                } catch (IOException | TelegramApiException e) {
+                    throw new RuntimeException(e);
+                }
 
             }
         }

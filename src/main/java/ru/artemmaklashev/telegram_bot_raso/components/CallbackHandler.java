@@ -3,6 +3,7 @@ package ru.artemmaklashev.telegram_bot_raso.components;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
@@ -27,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -41,33 +43,45 @@ public class CallbackHandler {
         this.registry = registry;
     }
 
-    public Object handleCallback(Update update) {
-        String callbackData = update.getCallbackQuery().getData();
-//        String chatId = update.getCallbackQuery().getMessage().getChatId().toString();
-//        int messageId = update.getCallbackQuery().getMessage().getMessageId();
+    public List<Object> handleCallback(Update update) throws IOException {
+
+        var callback = update.getCallbackQuery();
+        String callbackData = callback.getData();
+
+        List<Object> responses = new ArrayList<>();
+
+        // 1️⃣ ВСЕГДА отвечаем на callback
+        responses.add(
+                AnswerCallbackQuery.builder()
+                        .callbackQueryId(callback.getId())
+                        .build()
+        );
+
         Command command = registry.getCommand(callbackData);
+
         if (command != null) {
-            return command.execute(update);
+            Object result = command.execute(update);
+
+            if (result != null) {
+                responses.add(result);
+            }
+
         } else {
-            String chatId = update.getCallbackQuery().getMessage().getChatId().toString();
-            int messageId = update.getCallbackQuery().getMessage().getMessageId();
-            return EditMessageText.builder()
-                    .chatId(chatId)
-                    .messageId(messageId)
-                    .text("Неизвестное действие.")
-                    .build();
+            Long chatId = callback.getMessage().getChatId();
+            Integer messageId = callback.getMessage().getMessageId();
+
+            responses.add(
+                    EditMessageText.builder()
+                            .chatId(chatId)
+                            .messageId(messageId)
+                            .text("Неизвестное действие.")
+                            .build()
+            );
         }
 
-//        } else if (callbackData.startsWith("approve")) {
-//            return handleApprove(update, chatId);
-//        } else if ("dryMixReport".equalsIgnoreCase(callbackData)) {
-//            return handleDryMixReport(chatId, messageId);
-//        } else if ("gypsumBoardTable".equalsIgnoreCase(callbackData)) {
-//            return handleGypsumBoardTable(chatId, messageId);
-//        } else {
-//
-//        }
+        return responses;
     }
+
 
 //    private Object handleGypsumBoardTable(String chatId, int messageId)  {
 //        List<GypsumBoardProductionData> productionData = gypsymBoardReportService.getProductionsByInterval();

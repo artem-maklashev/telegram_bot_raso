@@ -1,10 +1,12 @@
 package ru.artemmaklashev.telegram_bot_raso.components;
 
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.meta.generics.TelegramClient;
 import org.telegram.telegrambots.meta.api.methods.botapimethods.BotApiMethod;
 import ru.artemmaklashev.telegram_bot_raso.config.TelegramConfig;
@@ -50,7 +52,7 @@ public class MessageService {
 //                    .parseMode("MarkdownV2")
 //                    .build();
 
-            executeImage(photo);
+        executeImage(photo);
 
     }
 
@@ -92,6 +94,14 @@ public class MessageService {
                     .parseMode("HTML")
                     .build();
             executeMessage(message);
+        }
+    }
+
+    public void sendDocument(SendDocument response) {
+        try {
+            client.execute(response);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
         }
     }
 }

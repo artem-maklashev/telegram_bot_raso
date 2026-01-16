@@ -1,6 +1,7 @@
 package ru.artemmaklashev.telegram_bot_raso.components.commands;
 
 import org.springframework.stereotype.Component;
+import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -22,22 +23,40 @@ public class GypsumBoardPlanTableCommand implements Command{
 
     @Override
     public Object execute(Update update) throws IOException {
-//        var data = service.getIntervalData(LocalDate.now());
-        var data = service.getIntervalData(LocalDate.ofYearDay(2026, 1)); //TODO: заглушка
+
+        if (!update.hasCallbackQuery()) {
+            return null;
+        }
+
+        var callback = update.getCallbackQuery();
+
+        if (callback.getMessage() == null) {
+            throw new IllegalStateException("Callback without message (inline mode)");
+        }
+
+        Long chatId = callback.getMessage().getChatId();
+
+        var data = service.getIntervalData(LocalDate.now());
         var tableData = composeTableData(data);
         var table = service.buildTable(tableData);
-        Long chatId = update.getMessage().getChatId();
+
         byte[] bytes = service.buildExcelFile(table);
+        System.out.println("Table created, size: " + bytes.length);
+
         InputFile inputFile = new InputFile(
                 new ByteArrayInputStream(bytes),
                 "plan_fact.xlsx"
         );
+        System.out.println("Excel file created, size: " + bytes.length);
+
         return SendDocument.builder()
                 .chatId(chatId)
                 .document(inputFile)
                 .caption("Таблица плана-факт")
                 .build();
     }
+
+
 
 
     private List<GypsumBoardPlanFactData> composeTableData(IntervalData  intervalData) {

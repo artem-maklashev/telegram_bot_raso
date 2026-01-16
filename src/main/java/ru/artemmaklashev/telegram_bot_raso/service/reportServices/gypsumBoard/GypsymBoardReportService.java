@@ -1,8 +1,6 @@
 package ru.artemmaklashev.telegram_bot_raso.service.reportServices.gypsumBoard;
 
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import ru.artemmaklashev.telegram_bot_raso.entity.delays.BoardDelays;
@@ -278,37 +276,43 @@ public class GypsymBoardReportService {
     }
 
     public void exportToExcel(PlanFactTableData table, OutputStream out) throws IOException {
-
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("План-Факт");
+
+            // Создаём стиль с переносом текста один раз
+            CellStyle wrapStyle = workbook.createCellStyle();
+            wrapStyle.setWrapText(true);
 
             int rowIdx = 0;
 
             // ===== HEADER =====
             Row header = sheet.createRow(rowIdx++);
             int colIdx = 0;
-
             header.createCell(colIdx++).setCellValue("Гипсокартон");
 
             for (LocalDate date : table.getDates()) {
-                header.createCell(colIdx++)
-                        .setCellValue(date.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+                Cell cell = header.createCell(colIdx++);
+                cell.setCellValue(date.format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
+                cell.setCellStyle(wrapStyle); // опционально, если дата длинная
             }
 
             // ===== DATA =====
             for (GypsumBoardRow rowData : table.getRows()) {
                 Row row = sheet.createRow(rowIdx++);
+                row.setHeightInPoints(50); // обеспечиваем место для двух строк
                 colIdx = 0;
 
-                row.createCell(colIdx++)
-                        .setCellValue(rowData.getGypsumBoard().toString());
+                row.createCell(colIdx++).setCellValue(rowData.getGypsumBoard().toString());
 
                 for (LocalDate date : table.getDates()) {
                     PlanFactValues v = rowData.getValuesByDate().get(date);
 
                     if (v != null) {
-                        row.createCell(colIdx++)
-                                .setCellValue(v.getFactValue()); // или "plan / fact"
+                        float deviation = v.getPlanValue()-v.getFactValue();
+                        String cellValue = String.format("План: %.0f \nФакт: %.0f \nΔ: %.0f", v.getPlanValue(), v.getFactValue(), deviation);
+                        Cell cell = row.createCell(colIdx++);
+                        cell.setCellValue(cellValue);
+                        cell.setCellStyle(wrapStyle);
                     } else {
                         row.createCell(colIdx++).setCellValue("");
                     }

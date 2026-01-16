@@ -2,10 +2,12 @@ package ru.artemmaklashev.telegram_bot_raso.controller;
 
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.botapimethods.BotApiMethod;
+import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.User;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import ru.artemmaklashev.telegram_bot_raso.components.CallbackHandler;
 import ru.artemmaklashev.telegram_bot_raso.components.CommandHandler;
 import ru.artemmaklashev.telegram_bot_raso.components.Keyboards;
@@ -13,7 +15,9 @@ import ru.artemmaklashev.telegram_bot_raso.components.MessageService;
 import ru.artemmaklashev.telegram_bot_raso.model.TelegramUser;
 import ru.artemmaklashev.telegram_bot_raso.service.telegram.TelegramUserService;
 
+import java.io.IOException;
 import java.util.ArrayDeque;
+import java.util.List;
 import java.util.Queue;
 
 
@@ -36,7 +40,7 @@ public class TelegramController {
         this.keyboards = keyboards;
     }
 
-    public void handleUpdate(Update update) {
+    public void handleUpdate(Update update) throws IOException, TelegramApiException {
         if (update.hasMessage() && update.getMessage().hasText()) {
             handleTextMessage(update);
         } else if (update.hasCallbackQuery()) {
@@ -69,15 +73,27 @@ public class TelegramController {
     }
 
 
-    private void handleCallback(Update update) {
-        Object response = callbackHandler.handleCallback(update);
+    private void handleCallback(Update update)
+            throws IOException, TelegramApiException {
 
-        if (response instanceof BotApiMethod<?>) {
-            messageService.executeMessage((BotApiMethod<?>) response);
-        } else if (response instanceof SendPhoto) {
-            messageService.sendImage((SendPhoto) response); // Отправка изображения
+        List<Object> responses = callbackHandler.handleCallback(update);
+
+        for (Object response : responses) {
+
+            if (response instanceof SendDocument doc) {
+                System.out.println("Sending document");
+                messageService.sendDocument(doc);
+                System.out.println("Document is sent");
+
+            } else if (response instanceof SendPhoto photo) {
+                messageService.sendImage(photo);
+
+            } else if (response instanceof BotApiMethod<?> method) {
+                messageService.executeMessage(method);
+            }
         }
     }
+
 
 
     private boolean userApproved(User user) {
