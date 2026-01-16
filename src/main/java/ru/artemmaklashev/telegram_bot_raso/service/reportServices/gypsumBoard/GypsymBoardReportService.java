@@ -51,15 +51,6 @@ public class GypsymBoardReportService {
 
     public List<GypsumBoardProductionData> getProductionsByInterval() {
         // 1. Определение временного интервала
-//        LocalDate now = LocalDate.now();
-//        LocalDateTime startDate;
-//        LocalDateTime endDate = now.minusDays(1).atStartOfDay(); // Конец периода - вчера
-//
-//        if (now.getDayOfMonth() != 1) {
-//            startDate = now.withDayOfMonth(1).atStartOfDay(); // Начало текущего месяца
-//        } else {
-//            startDate = now.minusMonths(1).withDayOfMonth(1).atStartOfDay(); // Начало предыдущего месяца
-//        }
         var data = getIntervalData(LocalDate.now());
 
         // 3. Обработка данных
@@ -221,26 +212,15 @@ public class GypsymBoardReportService {
     }
 
 
-    private static class PlanFactKey {
-        private final LocalDate date;
-        private final Integer boardId;
-
-        PlanFactKey(LocalDate date, Integer boardId) {
-            this.date = date;
-            this.boardId = boardId;
-        }
+    private record PlanFactKey(LocalDate date, Integer boardId) {
 
         @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof PlanFactKey key)) return false;
-            return date.equals(key.date) && boardId.equals(key.boardId);
-        }
+            public boolean equals(Object o) {
+                if (this == o) return true;
+                if (!(o instanceof PlanFactKey key)) return false;
+                return date.equals(key.date) && boardId.equals(key.boardId);
+            }
 
-        @Override
-        public int hashCode() {
-            return Objects.hash(date, boardId);
-        }
     }
 
     public PlanFactTableData buildTable(List<GypsumBoardPlanFactData> source) {

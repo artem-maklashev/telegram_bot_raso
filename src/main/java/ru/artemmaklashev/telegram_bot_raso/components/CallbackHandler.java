@@ -1,36 +1,15 @@
 package ru.artemmaklashev.telegram_bot_raso.components;
 
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
-import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
-import org.thymeleaf.context.Context;
-import org.thymeleaf.spring6.SpringTemplateEngine;
 import ru.artemmaklashev.telegram_bot_raso.components.commands.Command;
-import ru.artemmaklashev.telegram_bot_raso.controller.drymix.DryMixController;
-import ru.artemmaklashev.telegram_bot_raso.controller.gypsumboard.GypsumBoardController;
-import ru.artemmaklashev.telegram_bot_raso.entity.outdata.GypsumBoardProductionData;
-import ru.artemmaklashev.telegram_bot_raso.service.html.HtmlProductionTable;
-import ru.artemmaklashev.telegram_bot_raso.service.html.HtmlToImageConverter;
-import ru.artemmaklashev.telegram_bot_raso.service.reportServices.gypsumBoard.GypsymBoardReportService;
-import ru.artemmaklashev.telegram_bot_raso.service.telegram.TelegramUserService;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 @Component
 public class CallbackHandler {

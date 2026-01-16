@@ -1,7 +1,6 @@
 package ru.artemmaklashev.telegram_bot_raso.components.commands;
 
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -52,7 +51,7 @@ public class GypsumBoardPlanTableCommand implements Command{
         return SendDocument.builder()
                 .chatId(chatId)
                 .document(inputFile)
-                .caption("Таблица плана-факт")
+                .caption("Таблица план-факт на утро " + LocalDate.now())
                 .build();
     }
 
