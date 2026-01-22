@@ -25,4 +25,13 @@ public class ApproveCommand implements Command{
                 .text("Запрос отправлен")
                 .build();
     }
+
+    @Override
+    public void sendAdminMessage(String text) {
+    }
+
+    @Override
+    public void logRequest(Long userId, Long chatId, String text, String command) {
+
+    }
 }

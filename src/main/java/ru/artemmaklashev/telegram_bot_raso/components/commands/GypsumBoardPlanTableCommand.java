@@ -4,20 +4,28 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import ru.artemmaklashev.telegram_bot_raso.components.MessageService;
 import ru.artemmaklashev.telegram_bot_raso.entity.outdata.GypsumBoardPlanFactData;
 import ru.artemmaklashev.telegram_bot_raso.entity.outdata.IntervalData;
 import ru.artemmaklashev.telegram_bot_raso.service.reportServices.gypsumBoard.GypsumBoardReportService;
+import ru.artemmaklashev.telegram_bot_raso.service.telegram.RequestLoggingService;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 @Component("gypsumBoardPlanTable")
 public class GypsumBoardPlanTableCommand implements Command{
     private final GypsumBoardReportService service;
-    public GypsumBoardPlanTableCommand(GypsumBoardReportService service) {
+    private final MessageService messageService;
+    private final RequestLoggingService loggingService;
+
+    public GypsumBoardPlanTableCommand(GypsumBoardReportService service, MessageService messageService, RequestLoggingService loggingService) {
         this.service = service;
+        this.messageService = messageService;
+        this.loggingService = loggingService;
     }
 
     @Override
@@ -34,6 +42,8 @@ public class GypsumBoardPlanTableCommand implements Command{
         }
 
         Long chatId = callback.getMessage().getChatId();
+        String userName = callback.getFrom().getFirstName() + " "  + callback.getFrom().getLastName();
+        logRequest(callback.getFrom().getId(), chatId, userName, "gypsumBoardPlanTable");
         LocalDate today = LocalDate.now();
 //        LocalDate today = LocalDate.ofYearDay(2026, 1);
 
@@ -50,7 +60,7 @@ public class GypsumBoardPlanTableCommand implements Command{
                 "plan_fact.xlsx"
         );
         System.out.println("Excel file created, size: " + bytes.length);
-
+        sendAdminMessage("Пользователь " + userName + " запросил Excel таблицу план-факт за период");
         return SendDocument.builder()
                 .chatId(chatId)
                 .document(inputFile)
@@ -59,7 +69,15 @@ public class GypsumBoardPlanTableCommand implements Command{
                 .build();
     }
 
+    @Override
+    public void logRequest(Long userId, Long chatId, String text, String command) {
+        CompletableFuture.runAsync(() -> loggingService.logRequest(userId, chatId, text, command));
+    }
 
+    @Override
+    public void sendAdminMessage(String text) {
+        messageService.sendAdminMessage(text);
+    }
 
 
     private List<GypsumBoardPlanFactData> composeTableData(IntervalData  intervalData) {

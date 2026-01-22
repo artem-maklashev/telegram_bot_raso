@@ -6,4 +6,6 @@ import java.io.IOException;
 
 public interface Command {
     Object execute(Update update) throws IOException;
+    void sendAdminMessage(String text);
+    void logRequest(Long userId, Long chatId, String text, String command);
 }

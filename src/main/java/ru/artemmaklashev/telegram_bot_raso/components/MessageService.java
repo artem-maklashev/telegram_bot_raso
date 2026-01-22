@@ -1,5 +1,6 @@
 package ru.artemmaklashev.telegram_bot_raso.components;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.util.List;
 
 @Component
+@Slf4j
 public class MessageService {
     private final TelegramClient client;
     private final TelegramConfig config;
@@ -31,83 +33,76 @@ public class MessageService {
     }
 
     public void sendMessage(SendMessage message) {
-//        SendMessage message = SendMessage.builder()
-//                .chatId(chatId)
-//                .text(text)
-//                .parseMode("HTML")
-//                .build();
-        executeMessage(message);
+        executeRequest(message);
     }
 
     public void sendImage(SendPhoto photo) {
-
-//            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//            ImageIO.write(image, "png", baos);
-//            ByteArrayInputStream inputStream = new ByteArrayInputStream(baos.toByteArray());
-//            InputFile photoFile = new InputFile(inputStream, "chart.png");
-//
-//            SendPhoto message = SendPhoto.builder()
-//                    .chatId(chatId)
-//                    .photo(photoFile)
-//                    .caption(caption)
-//                    .parseMode("MarkdownV2")
-//                    .build();
-
-        executeImage(photo);
-
+        executeRequest(photo);
     }
 
-    public void executeMessage(BotApiMethod<?> message) {
-        try {
-            client.execute(message);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void sendDocument(SendDocument document) {
+        executeRequest(document);
     }
 
-    private void executeImage(SendPhoto message) {
-        try {
-            client.execute(message);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    public void answerCallbackQuery(AnswerCallbackQuery callbackQuery) {
+        executeRequest(callbackQuery);
     }
 
     public void sendAdminMessage(String text, InlineKeyboardMarkup keyboard) {
-        List<String> chatIds = config.getNotification().getChatIds();
-        for (String chatId : chatIds) {
-            SendMessage message = SendMessage.builder()
-                    .chatId(chatId)
-                    .text(text)
-                    .replyMarkup(keyboard)
-                    .parseMode("HTML")
-                    .build();
-            executeMessage(message);
-        }
+        sendToAllAdmins(text, keyboard);
     }
 
     public void sendAdminMessage(String text) {
-        List<String> chatIds = config.getNotification().getChatIds();
-        for (String chatId : chatIds) {
-            SendMessage message = SendMessage.builder()
-                    .chatId(chatId)
-                    .text(text)
-                    .parseMode("HTML")
-                    .build();
-            executeMessage(message);
-        }
+        sendToAllAdmins(text, null);
     }
 
-    public void sendDocument(SendDocument response) {
+    public void executeRequest(BotApiMethod<?> method) {
         try {
-            client.execute(response);
-        } catch (TelegramApiException e) {
-            e.printStackTrace();
+            client.execute(method);
+        } catch (Exception e) {
+            log.error("Failed to execute Telegram API method: {}", method.getClass().getSimpleName(), e);
         }
     }
 
-    public void answerCallbackQuery(AnswerCallbackQuery build) {
-        executeMessage(build);
+    private void executeRequest(SendPhoto photo) {
+        try {
+            client.execute(photo);
+        } catch (Exception e) {
+            log.error("Failed to send photo", e);
+        }
+    }
+
+    private void executeRequest(SendDocument document) {
+        try {
+            client.execute(document);
+        } catch (Exception e) {
+            log.error("Failed to send document", e);
+        }
+    }
+
+    private void sendToAllAdmins(String text, InlineKeyboardMarkup keyboard) {
+        List<String> adminChatIds = config.getNotification().getChatIds();
+
+        if (adminChatIds == null || adminChatIds.isEmpty()) {
+            log.warn("No admin chat IDs configured");
+            return;
+        }
+
+        adminChatIds.forEach(chatId -> sendAdminMessage(chatId, text, keyboard));
+    }
+
+    private void sendAdminMessage(String chatId, String text, InlineKeyboardMarkup keyboard) {
+        SendMessage.SendMessageBuilder messageBuilder = SendMessage.builder()
+                .chatId(chatId)
+                .text(text)
+                .parseMode("HTML");
+
+        if (keyboard != null) {
+            messageBuilder.replyMarkup(keyboard);
+        }
+
+        executeRequest(messageBuilder.build());
     }
 }
+
 

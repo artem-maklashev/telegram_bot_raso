@@ -25,4 +25,14 @@ public class DryMixReportCommand implements Command{
         BufferedImage image = controller.getImageReport();
         return userService.draw(report, image, chatId, messageId);
     }
+
+    @Override
+    public void sendAdminMessage(String text) {
+
+    }
+
+    @Override
+    public void logRequest(Long userId, Long chatId, String text, String command) {
+
+    }
 }

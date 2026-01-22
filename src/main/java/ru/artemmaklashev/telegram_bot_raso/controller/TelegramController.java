@@ -92,8 +92,10 @@ public class TelegramController {
                 messageService.sendImage(photo);
 
             } else if (response instanceof BotApiMethod<?> method) {
-                messageService.executeMessage(method);
+                messageService.executeRequest(method);
             }
+
+
         }
     }
 
